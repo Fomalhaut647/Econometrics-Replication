@@ -11,10 +11,12 @@ from scipy import stats
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from pathlib import Path
+import os
 
-def read_data(file_path):
+def read_data(file_path=None):
     """
     读取包含 SAS 程序中定义的所有变量的平面数据文件
+    如果没有提供 file_path，将自动查找数据文件
     """
     # 根据 SAS INPUT 语句定义列名
     columns = [
@@ -26,6 +28,13 @@ def read_data(file_path):
         'FIRSTIN2', 'SPECIAL2', 'MEALS2', 'OPEN2R', 'HRSOPEN2', 'PSODA2',
         'PFRY2', 'PENTREE2', 'NREGS2', 'NREGS112'
     ]
+    
+    # 如果没有提供文件路径，自动查找数据文件
+    if file_path is None:
+        file_path = find_data_file()
+        if file_path is None:
+            print("Error: 未找到数据文件") # 打印错误信息
+            return None
     
     try:
         # 首先尝试读取为分隔符为多个空格的值
@@ -49,6 +58,35 @@ def read_data(file_path):
         except:
             print(f"Error reading file {file_path}") # 打印错误信息
             return None
+
+def find_data_file():
+    """
+    查找数据文件，支持多种路径和文件名
+    """
+    # 获取当前脚本所在的目录
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # 可能的文件名
+    possible_files = ['public.dat', 'FLAT', 'data.txt', 'njpa_data.txt', 'flat_data.txt']
+    
+    # 可能的目录位置
+    possible_dirs = [
+        script_dir,  # 当前脚本目录
+        os.path.join(script_dir, 'data'),  # 脚本目录下的 data 子目录
+        os.path.join(script_dir, '..', 'data'),  # 脚本父目录下的 data 目录
+        os.getcwd(),  # 当前工作目录
+        os.path.join(os.getcwd(), 'data'),  # 当前工作目录下的 data 子目录
+    ]
+    
+    # 在各个可能的位置查找数据文件
+    for directory in possible_dirs:
+        if os.path.exists(directory):
+            for filename in possible_files:
+                file_path = os.path.join(directory, filename)
+                if os.path.exists(file_path):
+                    return file_path
+    
+    return None
 
 def calculate_derived_variables(df):
     """
@@ -328,26 +366,12 @@ def main():
     print("INPUT FLAT DATA FILE OF NJ-PA DATA AND CHECK") # 打印标题
     print("=" * 80) # 打印分隔线
     
-    # 查找数据文件
-    data_file = None # 初始化数据文件变量
-    possible_files = ['public.dat', 'FLAT', 'data.txt', 'njpa_data.txt', 'flat_data.txt'] # 可能的文件名列表
-    
-    for filename in possible_files: # 遍历文件名列表
-        if Path(filename).exists(): # 如果文件存在
-            data_file = filename # 设置数据文件变量
-            break # 退出循环
-    
-    if data_file is None: # 如果没有找到数据文件
-        print("Data file not found. Please ensure the flat data file is available.") # 打印错误信息
-        print("Expected filenames: public.dat, FLAT, data.txt, njpa_data.txt, or flat_data.txt") # 打印期望的文件名
-        return # 返回
-    
     # 读取和处理数据
-    df = read_data(data_file) # 读取数据
+    df = read_data() # 读取数据
     if df is None: # 如果读取数据失败
         return # 返回
     
-    print(f"Data loaded successfully from {data_file}") # 打印成功信息
+    print(f"数据加载成功") # 打印成功信息
     print(f"Number of observations: {len(df)}") # 打印观测数量
     
     # 计算衍生变量

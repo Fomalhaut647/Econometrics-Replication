@@ -14,7 +14,7 @@ def main():
     print("=" * 60) # 打印分隔线
     
     # 加载和处理数据
-    df = read_data('public.dat') # 读取数据文件
+    df = read_data() # 读取数据文件，自动查找
     if df is None: # 如果数据加载失败
         print("Error: Could not load data file") # 打印错误信息
         return # 返回

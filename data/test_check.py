@@ -11,18 +11,17 @@ def test_data_exists():
     """
     测试数据文件是否存在
     """
-    data_files = ['public.dat', 'FLAT', 'data.txt', 'njpa_data.txt', 'flat_data.txt'] # 可能的数据文件名列表
-    found_files = [] # 找到的文件列表
-    
-    for filename in data_files: # 遍历文件名列表
-        if Path(filename).exists(): # 如果文件存在
-            found_files.append(filename) # 添加到找到的文件列表
-    
-    if found_files: # 如果找到文件
-        print(f"✓ 找到数据文件: {', '.join(found_files)}") # 打印成功信息
-        return True # 返回 True
-    else: # 否则
-        print("✗ 未找到数据文件") # 打印错误信息
+    try:
+        import check
+        data_file = check.find_data_file()
+        if data_file:
+            print(f"✓ 找到数据文件: {data_file}") # 打印成功信息
+            return True # 返回 True
+        else: # 否则
+            print("✗ 未找到数据文件") # 打印错误信息
+            return False # 返回 False
+    except Exception as e:
+        print(f"✗ 查找数据文件时出错: {e}") # 打印错误信息
         return False # 返回 False
 
 def test_imports():
@@ -80,31 +79,27 @@ def run_quick_test():
         import check
         
         # 测试数据读取函数
-        if Path('public.dat').exists(): # 如果数据文件存在
-            df = check.read_data('public.dat') # 读取数据
-            if df is not None: # 如果数据读取成功
-                print(f"✓ 数据加载成功: {len(df)} 行, {len(df.columns)} 列") # 打印成功信息
-                
-                # 测试变量创建
-                df = check.calculate_derived_variables(df) # 计算衍生变量
-                print("✓ 衍生变量计算成功") # 打印成功信息
-                
-                # 检查关键变量是否存在
-                key_vars = ['EMPTOT', 'DEMP', 'PCHEMPC', 'gap', 'nj', 'bk', 'kfc', 'roys', 'wendys'] # 关键变量列表
-                missing_vars = [var for var in key_vars if var not in df.columns] # 查找缺失的变量
-                
-                if not missing_vars: # 如果没有缺失变量
-                    print("✓ 所有关键衍生变量已创建") # 打印成功信息
-                    return True # 返回 True
-                else: # 否则
-                    print(f"✗ 缺失变量: {missing_vars}") # 打印错误信息
-                    return False # 返回 False
-            else: # 如果数据读取失败
-                print("✗ 数据加载失败") # 打印错误信息
+        df = check.read_data() # 使用自动查找功能读取数据
+        if df is not None: # 如果数据读取成功
+            print(f"✓ 数据加载成功: {len(df)} 行, {len(df.columns)} 列") # 打印成功信息
+            
+            # 测试变量创建
+            df = check.calculate_derived_variables(df) # 计算衍生变量
+            print("✓ 衍生变量计算成功") # 打印成功信息
+            
+            # 检查关键变量是否存在
+            key_vars = ['EMPTOT', 'DEMP', 'PCHEMPC', 'gap', 'nj', 'bk', 'kfc', 'roys', 'wendys'] # 关键变量列表
+            missing_vars = [var for var in key_vars if var not in df.columns] # 查找缺失的变量
+            
+            if not missing_vars: # 如果没有缺失变量
+                print("✓ 所有关键衍生变量已创建") # 打印成功信息
+                return True # 返回 True
+            else: # 否则
+                print(f"✗ 缺失变量: {missing_vars}") # 打印错误信息
                 return False # 返回 False
-        else: # 如果数据文件不存在
-            print("⚠ 未找到数据文件进行测试") # 打印警告信息
-            return True # 返回 True (在这种情况下数据不存在是预期行为)
+        else: # 如果数据读取失败
+            print("✗ 数据加载失败") # 打印错误信息
+            return False # 返回 False
     except Exception as e: # 捕获异常
         print(f"✗ 测试期间出错: {e}") # 打印错误信息
         return False # 返回 False
