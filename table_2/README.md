@@ -4,7 +4,7 @@
 
 ## 文件说明
 
-- `table_2_replication.py` - 主程序文件，包含完整的 Table 2 复现代码
+- `replicate.py` - 主程序文件，包含完整的 Table 2 复现代码
 - `table_2.md` - 目标表格和计算要求说明
 - `README.md` - 本文档
 
@@ -12,7 +12,7 @@
 
 ```bash
 cd table_2
-python table_2_replication.py
+python replicate.py
 ```
 
 ## 复现结果
