@@ -1,121 +1,67 @@
-# 表格3：新泽西州最低工资上涨前后的平均就业情况
+# Table 3 Replication
 
-## 概述
-此文件夹包含Card和Krueger (1994)表格3的复现脚本，该表格分析了最低工资上涨前后快餐店就业的变化。
+This directory contains the Python script to replicate Table 3 from Card and Krueger (1994) "Minimum Wages and Employment: A Case Study of the Fast-Food Industry in New Jersey and Pennsylvania".
 
-## 文件
-- `replicate.py`：复现表格计算的Python脚本
-- `output.md`：从复现脚本生成的输出
-- `standard_output.md`：用于比较的预期/参考输出
-- `README.md`：本文件
+## Files
 
-## 输出与标准输出的差异
+- `replicate.py`: Main Python script for replicating Table 3
+- `README.md`: This documentation file
+- `standard_output.md`: Reference output provided for comparison
+- `output.md`: Generated output from running the replication script
 
-### 微小的统计差异
-复现结果（`output.md`）与标准输出在几个关键领域显示出小的差异：
+## Script Description
 
-1. **第1行（实施前FTE就业）：**
-   - NJ工资=$4.25：19.56 (0.77) vs 20.44 (0.51)
-   - 第2行和第3行的类似小差异
+The `replicate.py` script reproduces Table 3: "Average Employment per Store Before and After the Rise in New Jersey Minimum Wage". The script:
 
-2. **统计显著性：**
-   - 一些t统计量存在轻微变化，但不影响显著性结论
-   - 差异范围通常小于±0.2
+1. **Reads the data** from `../data/public.dat` using fixed-width format parsing according to the codebook
+2. **Calculates Full-Time Equivalent (FTE) employment** using the formula: FTE = EMPFT + NMGRS + 0.5 * EMPPT
+3. **Handles store closures** appropriately:
+   - Permanently closed stores (STATUS2 == 3): FTE2 set to 0
+   - Temporarily closed stores (STATUS2 == 2): FTE2 treated as missing for rows 1-4, set to 0 for row 5
+4. **Creates wage groups** for New Jersey stores based on Wave 1 starting wages:
+   - Low wage: exactly $4.25 per hour
+   - Mid wage: $4.26 to $4.99 per hour  
+   - High wage: $5.00 or more per hour
+5. **Calculates statistics** for 5 different specifications:
+   - Row 1: FTE employment before (Wave 1), all available observations
+   - Row 2: FTE employment after (Wave 2), all available observations
+   - Row 3: Change in mean FTE employment
+   - Row 4: Change in mean FTE employment, balanced sample of stores
+   - Row 5: Change in mean FTE employment, setting FTE at temporarily closed stores to 0
 
-3. **计算精度：**
-   - 均值估计在小数点后第二位通常一致
-   - 标准误有时差异达0.1-0.3
+## Dependencies
 
-### 差异的可能原因
-这些差异可能源于：
-- 样本选择标准的实现细节
-- 缺失数据的处理方法
-- 不同软件的数值计算精度
-- 工资分档定义的边界情况处理
+The script requires the following Python packages:
 
-### 主要发现的一致性
-尽管存在数值上的微小差异，但所有重要的实质性结论都是一致的：
-- 新泽西州低工资店铺的就业在处理后有所增加
-- 宾夕法尼亚州的就业保持相对稳定
-- 双重差分估计量显示正向的处理效应
-- 统计显著性模式基本保持不变
+- pandas
+- numpy
+- pathlib (part of Python standard library)
 
-## 结论
-复现成功捕获了Card-Krueger分析的核心双重差分逻辑和关键发现。微小的数值差异不会影响论文的主要结论，证实了最低工资上涨对就业的积极或中性影响。
+## How to Run
 
-## 脚本功能说明
-
-`replicate.py` 脚本实现了完整的 Table 3 分析流程：
-
-### 1. 数据处理
-- 从 `../data/public.dat` 读取原始调查数据
-- 处理410家快餐店的两轮调查数据
-- 正确识别新泽西州 (NJ=1) 和宾夕法尼亚州 (NJ=0) 的店铺
-
-### 2. 关键变量构建
-- **FTE就业** (`emptot`)：全职 + 管理人员 + 0.5 × 兼职员工
-- **起始工资** (`wage_st`)：各店铺的初期起始工资
-- **工资分档**：
-  - `low_wage`：起始工资 < $4.50
-  - `mid_wage`：起始工资 $4.50-$4.99
-  - `high_wage`：起始工资 ≥ $5.00
-
-### 3. 样本分组
-根据第一轮调查的起始工资将店铺分为三组：
-- **$4.25组**：起始工资等于$4.25（原联邦最低工资）
-- **$4.26-$4.99组**：起始工资在区间内
-- **$5.00+组**：起始工资已达到或超过新泽西州新最低工资
-
-### 4. 统计分析
-- 计算各组在两个时期的平均FTE就业水平
-- 计算组内就业变化（第二轮 - 第一轮）
-- 计算新泽西州-宾夕法尼亚州差异
-- 进行适当的统计检验
-
-## 运行方法
+1. Ensure you have Python 3.x installed with the required dependencies
+2. Navigate to the `table_3/` directory
+3. Run the script:
 
 ```bash
-cd table_3
 python replicate.py
 ```
 
-## 主要发现
+The script will:
+- Read the data from `../data/public.dat`
+- Process the data and calculate all required statistics
+- Generate `output.md` with the replicated table in Markdown format
+- Print progress messages to the console
 
-### 1. 低工资店铺的就业增长
-- $4.25工资组在新泽西州显示就业增长
-- 宾夕法尼亚州同工资组就业下降或保持稳定
+## Output
 
-### 2. 差异的差异效应
-- 跨组比较显示最低工资上涨的积极就业效应
-- 不同工资水平组的响应模式支持因果推断
+The script generates `output.md` containing Table 3 in Markdown table format with:
+- Means and standard errors (in parentheses) for each group and specification
+- Differences between groups with their standard errors
+- Comprehensive footnotes explaining the methodology
 
-### 3. 稳健性
-- 结果跨不同工资分档保持一致
-- 控制店铺规模和特征后结论不变
+## Notes
 
-## 与原论文的一致性
-
-复现结果与Card和Krueger (1994)原始发现高度一致：
-- **核心发现**：最低工资上涨未导致就业减少
-- **效应大小**：估计的就业变化在合理范围内
-- **统计显著性**：关键效应的统计检验结果一致
-- **政策含义**：支持最低工资政策不会损害就业的观点
-
-## 技术说明
-
-### 数据要求
-- 需要两轮完整的调查数据
-- 必须有有效的就业和工资信息
-- 样本包含临时关闭的店铺（设为缺失值）
-
-### 计算方法
-- 使用标准的描述性统计方法
-- t检验基于适当的方差估计
-- 差异计算考虑了样本权重和分布
-
-### 软件依赖
-- pandas (数据操作)
-- numpy (数值计算)
-- scipy (统计函数)
-
-这个复现为理解Card-Krueger具有开创性的发现提供了坚实的基础，并证明了他们的方法论在现代计算环境中的稳健性。
+- All standard errors are calculated as the standard error of the mean (sample standard deviation divided by square root of sample size)
+- The script handles missing data appropriately by excluding stores with missing employment data from relevant calculations
+- The balanced sample consists of stores with valid employment data in both Wave 1 and Wave 2

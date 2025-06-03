@@ -131,8 +131,8 @@ def format_table(results, sample_size):
 
     table_data.append(row6)
 
-    # 创建 markdown 表格
-    header = "| Independent variable                       | Model (i)   | Model (ii)  | Model (iii) | Model (iv)  | Model (v)   |"
+    # 创建 markdown 表格 - 修复列标题格式
+    header = "| Independent variable                       | (i)   | (ii)  | (iii) | (iv)  | (v)   |"
     separator = "| :----------------------------------------- | :---------- | :---------- | :---------- | :---------- | :---------- |"
 
     table_lines = [title, "", header, separator]
@@ -143,11 +143,11 @@ def format_table(results, sample_size):
     # 添加注释
     notes = [
         "",
-        f"Notes: Standard errors are given in parentheses. The sample consists of {sample_size} stores with available data on employment and starting wages in waves 1 and 2. The dependent variable in all models is change in FTE employment. The mean and standard deviation of the dependent variable are {results['model1'].model.endog.mean():.3f} and {results['model1'].model.endog.std():.3f}, respectively. All models include an unrestricted constant (not reported).",
+        f"Notes: Standard errors are given in parentheses. The sample consists of {sample_size} stores with available data on employment and starting wages in waves 1 and 2. The dependent variable in all models is change in FTE employment. The mean and standard deviation of the dependent variable are {results['model1'].model.endog.mean():.3f} and {results['model1'].model.endog.std():.3f}, respectively. All models include an unrestricted constant (not reported).", 
         "",
-        "<sup>a</sup> Proportional increase in starting wage necessary to raise starting wage to new minimum rate. For stores in Pennsylvania the wage gap is 0.",
-        "<sup>b</sup> Three dummy variables for chain type and whether or not the store is company-owned are included.",
-        "<sup>c</sup> Dummy variables for two regions of New Jersey and two regions of eastern Pennsylvania are included.",
+        "<sup>a</sup> Proportional increase in starting wage necessary to raise starting wage to new minimum rate. For stores in Pennsylvania the wage gap is 0. ",
+        "<sup>b</sup> Three dummy variables for chain type and whether or not the store is company-owned are included. ",
+        "<sup>c</sup> Dummy variables for two regions of New Jersey and two regions of eastern Pennsylvania are included. ",
         "<sup>d</sup> Probability value of joint F test for exclusion of all control variables."
     ]
 

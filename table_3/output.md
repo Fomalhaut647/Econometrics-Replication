@@ -1,13 +1,12 @@
 **TABLE 3-AVERAGE EMPLOYMENT PER STORE BEFORE AND AFTER THE RISE IN NEW JERSEY MINIMUM WAGE**
 
 | Variable | PA (i) | NJ (ii) | Difference, NJ-PA (iii) | NJ Wage = $4.25 (iv) | NJ Wage = $4.26-$4.99 (v) | NJ Wage >= $5.00 (vi) | Diff Low-high (vii)<sup>b</sup> | Diff Midrange-high (viii)<sup>b</sup> |
-| :----------------------------------------------------------------------- | :------------ | :------------ | :---------------------- | :------------------- | :------------------------ | :-------------------- | :-------------------------- | :---------------------------- |
-| 1. FTE employment before, all available observations<sup>a</sup> | 23.33 (1.35) | 20.44 (0.51) | -2.89 (1.44) | 19.56 (0.77) | 20.08 (0.84) | 22.25 (1.14) | -2.69 (1.37) | -2.17 (1.41) |
-| 2. FTE employment after, all available observations<sup>a</sup> | 21.17 (0.94) | 21.03 (0.52) | -0.14 (1.08) | 20.88 (1.01) | 20.96 (0.76) | 20.21 (1.03) | 0.66 (1.44) | 0.74 (1.27) |
-| 3. Change in mean FTE employment | -2.28 (1.25) | 0.47 (0.48) | 2.75 (1.34) | 1.20 (0.82) | 0.71 (0.69) | -2.16 (1.01) | 3.36 (1.30) | 2.87 (1.22) |
-| 4. Change in mean FTE employment, balanced sample of stores<sup>c</sup> | -2.28 (1.25) | 0.47 (0.48) | 2.75 (1.34) | 1.20 (0.82) | 0.71 (0.69) | -2.16 (1.01) | 3.36 (1.30) | 2.87 (1.22) |
-| 5. Change in mean FTE employment, setting FTE at temporarily closed stores to 0<sup>d</sup> | -2.28 (1.25) | 0.23 (0.49) | 2.51 (1.35) | 0.90 (0.87) | 0.49 (0.69) | -2.39 (1.02) | 3.29 (1.34) | 2.88 (1.23) |
-
+| :----------------------------------------------------------------------- | :----------- | :----------- | :---------------------- | :------------------- | :------------------------ | :-------------------- | :-------------------------- | :---------------------------- |
+| 1. FTE employment before, all available observations<sup>a</sup> | 23.33 (1.35) | 20.44 (0.51) | -2.89 (1.91) | 19.56 (0.77) | 20.08 (0.84) | 22.25 (1.14) | -2.69 (1.61) | -2.17 (1.61) |
+| 2. FTE employment after, all available observations<sup>a</sup> | 21.17 (0.94) | 21.03 (0.52) | -0.14 (1.33) | 20.88 (1.01) | 20.96 (0.76) | 20.21 (1.03) | 0.66 (1.45) | 0.74 (1.45) |
+| 3. Change in mean FTE employment | -2.17 (1.33) | 0.59 (0.74) | 2.75 (1.89) | 1.32 (1.42) | 0.87 (1.07) | -2.04 (1.45) | 3.36 (2.05) | 2.91 (2.05) |
+| 4. Change in mean FTE employment, balanced sample of stores<sup>c</sup> | -2.28 (1.25) | 0.47 (0.48) | 2.75 (1.77) | 1.20 (0.82) | 0.71 (0.69) | -2.16 (1.01) | 3.36 (1.42) | 2.87 (1.42) |
+| 5. Change in mean FTE employment, setting FTE at temporarily closed stores to 0<sup>d</sup> | -2.28 (1.25) | 0.33 (0.49) | 2.61 (1.77) | 0.90 (0.87) | 0.60 (0.69) | -2.16 (1.01) | 3.05 (1.42) | 2.76 (1.42) |
 
 Notes: Standard errors are shown in parentheses. The sample consists of all stores with available data on employment.
 <sup>a</sup> FTE (full-time-equivalent) employment counts each part-time worker as half a full-time worker. Employment at six closed stores is set to zero. Employment at four temporarily closed stores is treated as missing.
