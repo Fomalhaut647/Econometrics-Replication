@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 复现 Card and Krueger (1994) 的表 7
-“最低工资与就业：新泽西州和宾夕法尼亚州快餐业案例研究”
+"最低工资与就业：新泽西州和宾夕法尼亚州快餐业案例研究"
 """
 
 import os
@@ -12,8 +12,9 @@ from io import StringIO
 
 def load_data():
     """加载并解析固定宽度格式的数据文件"""
-    # 使用 os.path.join 定义数据文件的路径以增强稳健性
-    data_path = os.path.join('data', 'public.dat')
+    # 获取脚本所在目录并构建数据文件的绝对路径
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    data_path = os.path.join(script_dir, '..', 'data', 'public.dat')
     
     # 基于代码手册的列规范
     colspecs = [
@@ -232,8 +233,14 @@ def format_coefficient(coef, se):
         return ["", ""]
     return [f"{coef:.3f}", f"({se:.3f})"]
 
-def print_table(results, df):
+def print_table(results, df, output_file=None):
     """以匹配 standard.md 的格式打印结果"""
+    
+    if output_file:
+        import io
+        import sys
+        old_stdout = sys.stdout
+        sys.stdout = output_buffer = io.StringIO()
     
     print("| Independent variable          | (i)         | (ii)        | (iii)       | (iv)        | (v)         |")
     print("|-------------------------------|-------------|-------------|-------------|-------------|-------------|")
@@ -319,6 +326,16 @@ def print_table(results, df):
     print("Three dummy variables for chain type and whether or not the store is company-owned are included.")
     print("Dummy variables for two regions of New Jersey and two regions of eastern Pennsylvania are included.")
 
+    if output_file:
+        output_content = output_buffer.getvalue()
+        sys.stdout = old_stdout
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(output_content)
+        print(f"Results saved to {output_file}")
+        return output_content
+    
+    return None
+
 def main():
     """主函数，运行复现过程"""
     print("Replicating Table 7 from Card and Krueger (1994)")
@@ -337,8 +354,10 @@ def main():
     # 运行回归
     results = run_regressions(df_clean)
     
-    # 打印结果表格
-    print_table(results, df_clean)
+    # 打印结果表格并保存到文件
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_path = os.path.join(script_dir, 'output.md')
+    print_table(results, df_clean, output_path)
 
 if __name__ == "__main__":
     main()

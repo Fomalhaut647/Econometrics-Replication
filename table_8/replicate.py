@@ -289,11 +289,21 @@ def main():
     print("=" * 80)
     print(table_content)
     
+    # 保存到文件
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_path = os.path.join(script_dir, 'output.md')
+    
+    try:
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(table_content)
+        print(f"\nResults saved to {output_path}")
+    except Exception as e:
+        print(f"\nWarning: Could not save results to file: {e}")
+    
     # 步骤5: 验证结果
     print("\n步骤 4: 验证结果与标准输出的匹配...")
     
     # 检查 standard.md 文件是否存在
-    script_dir = os.path.dirname(os.path.abspath(__file__))
     standard_path = os.path.join(script_dir, 'standard.md')
     
     if os.path.exists(standard_path):

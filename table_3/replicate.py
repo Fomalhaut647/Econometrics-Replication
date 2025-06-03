@@ -619,10 +619,15 @@ def main(output_file=None):
         sys.exit(1)
 
 if __name__ == "__main__":
-    # 检查命令行参数
-    output_file = None
+    # 设置输出文件路径
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_file = os.path.join(script_dir, 'output.md')
+    
+    # 检查命令行参数（如果有的话）
     if len(sys.argv) > 1:
         output_file = sys.argv[1]
+        print(f"Output will be saved to: {output_file}")
+    else:
         print(f"Output will be saved to: {output_file}")
     
     main(output_file) 

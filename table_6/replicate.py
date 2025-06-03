@@ -361,6 +361,17 @@ def main():
     # 生成并打印表格
     table = generate_table_6(df)
     print(table)
+    
+    # 保存到文件
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_path = os.path.join(script_dir, 'output.md')
+    
+    try:
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(table)
+        print(f"\nResults saved to {output_path}")
+    except Exception as e:
+        print(f"\nWarning: Could not save results to file: {e}")
 
 if __name__ == "__main__":
     main()

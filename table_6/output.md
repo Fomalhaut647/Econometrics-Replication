@@ -15,10 +15,10 @@
 | 9. Usual amount of first raise (cents) | -0.01 (0.01) | -0.02 (0.02) | 0.01 (0.02) | 0.01 (0.02) | 0.03 (0.11) | 0.03 (0.13) |
 | 10. Slope of wage profile (percent per week) | -0.02 (0.01) | -0.02 (0.02) | 0.00 (0.02) | 0.00 (0.02) | -0.02 (0.11) | -0.02 (0.13) |
 
-Notes: Entries in columns (i) and (ii) represent mean changes in the outcome variable indicated by the row heading for stores with available data on the outcome in waves 1 and 2. [cite: 260] Entries in columns (iv)-(vi) represent estimated regression coefficients of indicated variable (NJ dummy or initial wage gap) in models for the change in the outcome variable. [cite: 260] Regression models include chain dummies and an indicator for company-owned stores. [cite: 261]
+Notes: Entries in columns (i) and (ii) represent mean changes in the outcome variable indicated by the row heading for stores with available data on the outcome in waves 1 and 2. Entries in columns (iv)-(vi) represent estimated regression coefficients of indicated variable (NJ dummy or initial wage gap) in models for the change in the outcome variable. Regression models include chain dummies and an indicator for company-owned stores.
 
-ªThe wage gap is the proportional increase in starting wage necessary to raise the wage to the new minimum rate. [cite: 262] For stores in Pennsylvania, the wage gap is zero. [cite: 263]
+ªThe wage gap is the proportional increase in starting wage necessary to raise the wage to the new minimum rate. For stores in Pennsylvania, the wage gap is zero.
 
-ᵇModels in column (vi) include dummies for two regions of New Jersey and two regions of eastern Pennsylvania. [cite: 263]
+ᵇModels in column (vi) include dummies for two regions of New Jersey and two regions of eastern Pennsylvania.
 
-ᶜFraction of part-time employees in total full-time-equivalent employment. [cite: 264]
+ᶜFraction of part-time employees in total full-time-equivalent employment.

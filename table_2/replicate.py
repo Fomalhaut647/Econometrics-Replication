@@ -159,10 +159,16 @@ def calculate_stats_by_state(df, var_name, nj_data, pa_data):
     
     return nj_mean, nj_se, pa_mean, pa_se, t_stat
 
-def print_table_2(df):
+def print_table_2(df, output_file=None):
     """
     打印 Table 2 格式的结果
     """
+    if output_file:
+        import io
+        import sys
+        old_stdout = sys.stdout
+        sys.stdout = output_buffer = io.StringIO()
+    
     print("**TABLE 2-MEANS OF KEY VARIABLES**\n")
     print("| Variable                          | NJ           | PA           | $t^{a}$   |")
     print("| :-------------------------------- | :----------- | :----------- | :-------- |")
@@ -276,6 +282,16 @@ def print_table_2(df):
     print("\n*Notes: See text for definitions. Standard errors are given in parentheses.")
     print("<sup>a</sup> Test of equality of means in New Jersey and Pennsylvania.*")
 
+    if output_file:
+        output_content = output_buffer.getvalue()
+        sys.stdout = old_stdout
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(output_content)
+        print(f"Results saved to {output_file}")
+        return output_content
+    
+    return None
+
 def main():
     """
     主函数
@@ -294,8 +310,12 @@ def main():
     # 计算衍生变量
     df = calculate_derived_variables(df)
     
-    # 打印 Table 2
-    print_table_2(df)
+    # 生成并保存表格到文件
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_path = os.path.join(script_dir, 'output.md')
+    
+    # 打印 Table 2 并保存到文件
+    print_table_2(df, output_path)
 
 if __name__ == "__main__":
     main() 
