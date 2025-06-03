@@ -1,6 +1,6 @@
 **TABLE 4-REDUCED-FORM MODELS FOR CHANGE IN EMPLOYMENT** 
 
-| Independent variable                       | Model (i)   | Model (ii)  | Model (iii) | Model (iv)  | Model (v)   |
+| Independent variable                       | (i)   | (ii)  | (iii) | (iv)  | (v)   |
 | :----------------------------------------- | :---------- | :---------- | :---------- | :---------- | :---------- |
 | 1. New Jersey dummy                        | 2.33 (1.19) | 2.30 (1.20) |             |             |             |
 | 2. Initial wage gap<sup>a</sup>            |             |             | 15.65 (6.08)| 14.92 (6.21)| 11.91 (7.39)|
