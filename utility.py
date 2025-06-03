@@ -307,18 +307,24 @@ def calculate_mean_and_se(series):
     计算均值和标准误
     
     Parameters:
-    series (pd.Series): 数据序列
+    series (pd.Series or np.array): 数据序列
     
     Returns:
     tuple: (均值, 标准误, 样本量)
     """
-    clean_series = series.dropna()
+    if isinstance(series, np.ndarray):
+        # 处理numpy数组
+        clean_series = series[~np.isnan(series)]
+    else:
+        # 处理pandas Series
+        clean_series = series.dropna()
+        clean_series = clean_series.values if hasattr(clean_series, 'values') else clean_series
     
     if len(clean_series) == 0:
         return np.nan, np.nan, 0
     
-    mean_val = clean_series.mean()
-    std_val = clean_series.std(ddof=1)  # 样本标准差
+    mean_val = np.mean(clean_series)
+    std_val = np.std(clean_series, ddof=1)  # 样本标准差
     n = len(clean_series)
     se_val = std_val / np.sqrt(n) if n > 0 else np.nan
     
@@ -329,13 +335,24 @@ def calculate_two_sample_ttest(series1, series2):
     计算两样本t检验
     
     Parameters:
-    series1, series2 (pd.Series): 两个样本数据
+    series1, series2 (pd.Series or np.array): 两个样本数据
     
     Returns:
     tuple: (t统计量, p值)
     """
-    clean1 = series1.dropna()
-    clean2 = series2.dropna()
+    # 处理第一个序列
+    if isinstance(series1, np.ndarray):
+        clean1 = series1[~np.isnan(series1)]
+    else:
+        clean1 = series1.dropna()
+        clean1 = clean1.values if hasattr(clean1, 'values') else clean1
+    
+    # 处理第二个序列  
+    if isinstance(series2, np.ndarray):
+        clean2 = series2[~np.isnan(series2)]
+    else:
+        clean2 = series2.dropna()
+        clean2 = clean2.values if hasattr(clean2, 'values') else clean2
     
     if len(clean1) < 2 or len(clean2) < 2:
         return np.nan, np.nan
@@ -418,8 +435,55 @@ def calculate_wage_percentages(df, target_wage, wave='1'):
     """
     wage_col = 'WAGE_ST' if wave == '1' else 'WAGE_ST2'
     
-    # 如果店铺的起始工资等于目标工资，则为100%，否则为0%
-    wage_pct = np.where(df[wage_col] == target_wage, 100.0, 0.0)
+    if target_wage == 4.25:
+        if wave == '1':
+            # Wave 1：对于所有商店，估算员工中拿$4.25工资的比例
+            # 如果起始工资是$4.25，使用PCTAFF值（如果可用）
+            # 如果起始工资高于$4.25但较低，可能仍有部分员工拿$4.25
+            # 如果起始工资远高于$4.25，则员工中拿$4.25的比例为0
+            wage_pct = np.where(
+                df[wage_col] == 4.25,
+                np.where(df['PCTAFF'].notna(), df['PCTAFF'], 100.0),
+                np.where(
+                    (df[wage_col] > 4.25) & (df[wage_col] <= 4.75),
+                    # 对于起始工资稍高于$4.25的商店，假设有一定比例员工仍拿$4.25
+                    np.maximum(0, 100.0 - 2 * (df[wage_col] - 4.25) * 100),
+                    0.0
+                )
+            )
+        else:
+            # Wave 2：新泽西州最低工资已提高到$5.05，理论上没有员工拿$4.25
+            # 但宾夕法尼亚州仍可能有员工拿$4.25
+            wage_pct = np.where(
+                (df['nj'] == 0) & (df[wage_col] <= 4.25),
+                100.0,
+                np.where(
+                    (df['nj'] == 0) & (df[wage_col] > 4.25) & (df[wage_col] <= 4.75),
+                    np.maximum(0, 100.0 - 2 * (df[wage_col] - 4.25) * 100),
+                    0.0
+                )
+            )
+    
+    elif target_wage == 5.05:
+        if wave == '1':
+            # Wave 1几乎没有$5.05的工资
+            wage_pct = np.where(df[wage_col] >= 5.05, 100.0, 0.0)
+        else:
+            # Wave 2：主要针对新泽西州，根据起始工资推断
+            wage_pct = np.where(
+                df[wage_col] == 5.05,
+                100.0,
+                np.where(
+                    (df[wage_col] >= 4.25) & (df[wage_col] < 5.05) & (df['nj'] == 1),
+                    # 新泽西州工资在$4.25-$5.05之间的，假设大部分员工被提高到$5.05
+                    100.0 - np.where(df['PCTAFF'].notna(), df['PCTAFF'] * 0.2, 20.0),
+                    0.0
+                )
+            )
+    
+    else:
+        # 其他工资值，简单检查起始工资
+        wage_pct = np.where(df[wage_col] == target_wage, 100.0, 0.0)
     
     return wage_pct
 

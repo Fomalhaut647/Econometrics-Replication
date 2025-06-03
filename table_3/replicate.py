@@ -91,11 +91,17 @@ def generate_table3(df):
     
     # Row 3: Change in mean FTE employment
     row3 = {}
-    for group_name in groups.keys():
-        mean_diff = row2[group_name]['mean'] - row1[group_name]['mean']
-        se_diff = calculate_difference_se(row1[group_name]['se'], row2[group_name]['se'], 
-                                         row1[group_name]['se'], row2[group_name]['se'])
-        row3[group_name] = {'mean': mean_diff, 'se': se_diff}
+    for group_name, group_filter in groups.items():
+        # 对于第3行，应该计算每个商店的实际变化，然后取平均
+        group_data = df[group_filter]
+        # 只包含两波都有数据的商店
+        valid_both = group_data['EMPTOT'].notna() & group_data['FTE2_row1234'].notna()
+        if valid_both.sum() > 0:
+            change = group_data.loc[valid_both, 'FTE2_row1234'] - group_data.loc[valid_both, 'EMPTOT']
+            mean_val, se_val, n = util.calculate_mean_and_se(change)
+        else:
+            mean_val, se_val, n = np.nan, np.nan, 0
+        row3[group_name] = {'mean': mean_val, 'se': se_val, 'n': n}
     
     # Row 4: Change in mean FTE employment, balanced sample
     row4 = {}
@@ -255,6 +261,9 @@ def main():
     # 使用utility模块创建基本衍生变量
     print("Creating derived variables...")
     df = util.create_basic_derived_variables(df)
+    
+    # 创建工资组变量
+    df = util.create_wage_groups(df)
     
     # 计算FTE变体（处理临时关闭商店）
     print("Calculating FTE variants...")
