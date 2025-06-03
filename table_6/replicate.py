@@ -7,64 +7,22 @@
 并生成与标准输出完全匹配的 Markdown 格式表格。
 """
 
+import sys
 import os
+
+# 添加根目录到Python路径以导入utility模块
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import utility as util
 import pandas as pd
 import numpy as np
-import statsmodels.api as sm
 import statsmodels.formula.api as smf
-from scipy import stats
 
-def read_data():
+def calculate_table6_variables(df):
     """
-    使用与 check.py 中相同的结构读取 public.dat 文件
+    计算表6特有的变量
     """
-    # 获取此脚本的目录
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    data_path = os.path.join(script_dir, '..', 'data', 'public.dat')
+    df = df.copy()
     
-    # 根据代码手册定义列名
-    columns = [
-        'SHEET', 'CHAINr', 'CO_OWNED', 'STATEr', 'SOUTHJ', 'CENTRALJ', 'NORTHJ',
-        'PA1', 'PA2', 'SHORE', 'NCALLS', 'EMPFT', 'EMPPT', 'NMGRS', 'WAGE_ST',
-        'INCTIME', 'FIRSTINC', 'BONUS', 'PCTAFF', 'MEAL', 'OPEN', 'HRSOPEN',
-        'PSODA', 'PFRY', 'PENTREE', 'NREGS', 'NREGS11', 'TYPE2', 'STATUS2',
-        'DATE2', 'NCALLS2', 'EMPFT2', 'EMPPT2', 'NMGRS2', 'WAGE_ST2', 'INCTIME2',
-        'FIRSTIN2', 'SPECIAL2', 'MEALS2', 'OPEN2R', 'HRSOPEN2', 'PSODA2',
-        'PFRY2', 'PENTREE2', 'NREGS2', 'NREGS112'
-    ]
-    
-    # 读取数据
-    df = pd.read_csv(data_path, sep=r'\s+', names=columns, header=None)
-    
-    # 转换为数值类型，将 '.' 替换为 NaN
-    for col in df.columns:
-        df[col] = pd.to_numeric(df[col], errors='coerce')
-    
-    return df
-
-def calculate_derived_variables(df):
-    """
-    计算表6所需的派生变量
-    """
-    # 基本转换
-    df['nj'] = df['STATEr']  # NJ 虚拟变量
-    df['bk'] = (df['CHAINr'] == 1).astype(int)
-    df['kfc'] = (df['CHAINr'] == 2).astype(int)
-    df['roys'] = (df['CHAINr'] == 3).astype(int)
-    df['wendys'] = (df['CHAINr'] == 4).astype(int)
-    
-    # 计算全职等效就业人数
-    df['EMPTOT'] = df['EMPPT'] * 0.5 + df['EMPFT'] + df['NMGRS']
-    df['EMPTOT2'] = df['EMPPT2'] * 0.5 + df['EMPFT2'] + df['NMGRS2']
-    
-    # 计算 NJ 商店的工资差距
-    df['gap'] = 0.0
-    mask_nj = df['STATEr'] == 1
-    mask_wage_low = df['WAGE_ST'] < 5.05
-    mask_wage_pos = df['WAGE_ST'] > 0
-    df.loc[mask_nj & mask_wage_low & mask_wage_pos, 'gap'] = (5.05 - df['WAGE_ST']) / df['WAGE_ST']
-    
-    # 计算结果变量
     # 1. 全职工人比例 (百分比)
     df['FRACFT'] = np.where(df['EMPTOT'] > 0, df['EMPFT'] / df['EMPTOT'], np.nan)
     df['FRACFT2'] = np.where(df['EMPTOT2'] > 0, df['EMPFT2'] / df['EMPTOT2'], np.nan)
@@ -80,9 +38,6 @@ def calculate_derived_variables(df):
     df['dnregs11'] = df['NREGS112'] - df['NREGS11']
     
     # 5-7. 员工餐计划 (转换为百分比)
-    # 根据调试，需要以不同方式处理膳食计划
-    # 仅使用在两个调查波次中都有有效膳食数据的观测值
-    
     # 低价餐计划 (MEAL=2 或 MEAL=3 表示提供低价餐)
     df['lowprice'] = ((df['MEAL'] == 2) | (df['MEAL'] == 3)).astype(float) * 100
     df['lowprice2'] = ((df['MEALS2'] == 2) | (df['MEALS2'] == 3)).astype(float) * 100
@@ -102,10 +57,7 @@ def calculate_derived_variables(df):
     df['dinctime'] = df['INCTIME2'] - df['INCTIME']
     df['dfirstinc'] = df['FIRSTIN2'] - df['FIRSTINC']
     
-    # 计算工资斜率 (每周百分比) - 这需要仔细计算
-    # INCTIME 是首次加薪的月数，FIRSTINC 是加薪金额 (美元/小时)
-    # 斜率 = (加薪金额 / 月数) * (月数/周数) * (100 / 起始工资)
-    # = (FIRSTINC / INCTIME) * (12/52) * (100 / WAGE_ST)
+    # 计算工资斜率 (每周百分比)
     def calc_wage_slope(inctime, firstinc, wage_st):
         if pd.isna(inctime) or pd.isna(firstinc) or pd.isna(wage_st) or inctime <= 0 or wage_st <= 0:
             return np.nan
@@ -124,7 +76,7 @@ def compute_mean_changes(df, nj_val):
     """
     计算在两个调查波次中都有有效数据的 NJ 或 PA 商店的平均变化
     """
-    subset = df[df['nj'] == nj_val]
+    subset = util.filter_by_state(df, 'nj' if nj_val == 1 else 'pa')
     
     # 定义结果变量及其特定的样本要求
     outcomes = {
@@ -151,8 +103,7 @@ def compute_mean_changes(df, nj_val):
             valid_data = subset[var].dropna()
             
         if len(valid_data) > 0:
-            mean_val = valid_data.mean()
-            se_val = valid_data.std() / np.sqrt(len(valid_data))
+            mean_val, se_val, n = util.calculate_mean_and_se(valid_data)
             results[var] = (mean_val, se_val)
         else:
             results[var] = (np.nan, np.nan)
@@ -166,7 +117,7 @@ def run_regression(df, outcome_var, explanatory_var, controls=True, regions=Fals
     # 创建回归公式
     formula = f"{outcome_var} ~ {explanatory_var}"
     
-    # 添加控制变量 (连锁店虚拟变量和公司所有权) - 根据注释始终包含
+    # 添加控制变量 (连锁店虚拟变量和公司所有权)
     if controls:
         formula += " + bk + kfc + roys + CO_OWNED"
     
@@ -174,8 +125,7 @@ def run_regression(df, outcome_var, explanatory_var, controls=True, regions=Fals
     if regions:
         formula += " + CENTRALJ + SOUTHJ + PA1 + PA2"
     
-    # 筛选数据以获得有效观测值 (必须在两个调查波次中都有数据)
-    # 对于膳食变量，还需要有效的膳食数据
+    # 筛选数据以获得有效观测值
     if 'meal' in outcome_var or outcome_var in ['dlowprice', 'dfreemeal', 'dcombo']:
         reg_data = df.dropna(subset=[outcome_var, explanatory_var, 'MEAL', 'MEALS2'])
     else:
@@ -192,25 +142,11 @@ def run_regression(df, outcome_var, explanatory_var, controls=True, regions=Fals
     except:
         return np.nan, np.nan
 
-def format_number(value, se, decimal_places=2):
-    """
-    将数字格式化，标准误差在括号中，与标准表格格式匹配
-    """
-    if pd.isna(value) or pd.isna(se):
-        return ""
-    
-    if decimal_places == 0:
-        return f"{value:.0f} ({se:.0f})"
-    elif decimal_places == 1:
-        return f"{value:.1f} ({se:.1f})"
-    else:
-        return f"{value:.2f} ({se:.2f})"
-
 def generate_table_6(df):
     """
     以 markdown 格式生成表6
     """
-    # 结果变量及其标签 (具有精确格式)
+    # 结果变量及其标签
     outcomes = [
         ('dfracft', 'Fraction full-time workers (percentage)ᶜ', 2),
         ('dhrsopen', 'Number of hours open per weekday', 2),
@@ -262,12 +198,12 @@ def generate_table_6(df):
         
         # 格式化行
         row = f"| {i}. {label}"
-        row += f" | {format_number(nj_mean, nj_se, decimals)}"
-        row += f" | {format_number(pa_mean, pa_se, decimals)}"
-        row += f" | {format_number(diff_mean, diff_se, decimals)}"
-        row += f" | {format_number(nj_coef, nj_reg_se, decimals)}"
-        row += f" | {format_number(gap_coef, gap_se, decimals)}"
-        row += f" | {format_number(gap_reg_coef, gap_reg_se, decimals)} |"
+        row += f" | {util.format_coefficient(nj_mean, nj_se, decimals)}"
+        row += f" | {util.format_coefficient(pa_mean, pa_se, decimals)}"
+        row += f" | {util.format_coefficient(diff_mean, diff_se, decimals)}"
+        row += f" | {util.format_coefficient(nj_coef, nj_reg_se, decimals)}"
+        row += f" | {util.format_coefficient(gap_coef, gap_se, decimals)}"
+        row += f" | {util.format_coefficient(gap_reg_coef, gap_reg_se, decimals)} |"
         
         table_lines.append(row)
     
@@ -293,12 +229,12 @@ def generate_table_6(df):
         
         # 格式化行
         row = f"| {i}. {label}"
-        row += f" | {format_number(nj_mean, nj_se, decimals)}"
-        row += f" | {format_number(pa_mean, pa_se, decimals)}"
-        row += f" | {format_number(diff_mean, diff_se, decimals)}"
-        row += f" | {format_number(nj_coef, nj_reg_se, decimals)}"
-        row += f" | {format_number(gap_coef, gap_se, decimals)}"
-        row += f" | {format_number(gap_reg_coef, gap_reg_se, decimals)} |"
+        row += f" | {util.format_coefficient(nj_mean, nj_se, decimals)}"
+        row += f" | {util.format_coefficient(pa_mean, pa_se, decimals)}"
+        row += f" | {util.format_coefficient(diff_mean, diff_se, decimals)}"
+        row += f" | {util.format_coefficient(nj_coef, nj_reg_se, decimals)}"
+        row += f" | {util.format_coefficient(gap_coef, gap_se, decimals)}"
+        row += f" | {util.format_coefficient(gap_reg_coef, gap_reg_se, decimals)} |"
         
         table_lines.append(row)
     
@@ -329,12 +265,12 @@ def generate_table_6(df):
         
         # 格式化行
         row = f"| {i}. {label}"
-        row += f" | {format_number(nj_mean, nj_se, decimals)}"
-        row += f" | {format_number(pa_mean, pa_se, decimals)}"
-        row += f" | {format_number(diff_mean, diff_se, decimals)}"
-        row += f" | {format_number(nj_coef, nj_reg_se, decimals)}"
-        row += f" | {format_number(gap_coef, gap_se, decimals)}"
-        row += f" | {format_number(gap_reg_coef, gap_reg_se, decimals)} |"
+        row += f" | {util.format_coefficient(nj_mean, nj_se, decimals)}"
+        row += f" | {util.format_coefficient(pa_mean, pa_se, decimals)}"
+        row += f" | {util.format_coefficient(diff_mean, diff_se, decimals)}"
+        row += f" | {util.format_coefficient(nj_coef, nj_reg_se, decimals)}"
+        row += f" | {util.format_coefficient(gap_coef, gap_se, decimals)}"
+        row += f" | {util.format_coefficient(gap_reg_coef, gap_reg_se, decimals)} |"
         
         table_lines.append(row)
     
@@ -354,24 +290,20 @@ def main():
     """
     生成表6的主函数
     """
-    # 读取和处理数据
-    df = read_data()
-    df = calculate_derived_variables(df)
+    # 使用utility模块读取和处理数据
+    df = util.read_data()
+    df = util.create_basic_derived_variables(df)
+    
+    # 计算表6特有的变量
+    df = calculate_table6_variables(df)
     
     # 生成并打印表格
     table = generate_table_6(df)
     print(table)
     
     # 保存到文件
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    output_path = os.path.join(script_dir, 'output.md')
-    
-    try:
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(table)
-        print(f"\nResults saved to {output_path}")
-    except Exception as e:
-        print(f"\nWarning: Could not save results to file: {e}")
+    output_path = util.get_output_path(__file__)
+    util.save_output_to_file(table, output_path)
 
 if __name__ == "__main__":
     main()

@@ -6,100 +6,15 @@ Card 和 Krueger (1994) 论文中 Table 5 的复现脚本
 本脚本复现了论文中的 Table 5 - 简化形式就业模型的规范测试
 """
 
-import pandas as pd
-import numpy as np
-import statsmodels.api as sm
-import statsmodels.formula.api as smf
-from scipy import stats
+import sys
 import os
 
-def load_data():
-    """
-    从 public.dat 文件加载并解析 NJ-PA 数据
-    """
-    # 获取脚本目录并构建数据文件的路径
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    data_path = os.path.join(script_dir, '..', 'data', 'public.dat')
-
-    # 根据代码手册定义列名
-    columns = [
-        'SHEET', 'CHAINr', 'CO_OWNED', 'STATEr', 'SOUTHJ', 'CENTRALJ', 'NORTHJ',
-        'PA1', 'PA2', 'SHORE', 'NCALLS', 'EMPFT', 'EMPPT', 'NMGRS', 'WAGE_ST',
-        'INCTIME', 'FIRSTINC', 'BONUS', 'PCTAFF', 'MEAL', 'OPEN', 'HRSOPEN',
-        'PSODA', 'PFRY', 'PENTREE', 'NREGS', 'NREGS11', 'TYPE2', 'STATUS2',
-        'DATE2', 'NCALLS2', 'EMPFT2', 'EMPPT2', 'NMGRS2', 'WAGE_ST2', 'INCTIME2',
-        'FIRSTIN2', 'SPECIAL2', 'MEALS2', 'OPEN2R', 'HRSOPEN2', 'PSODA2',
-        'PFRY2', 'PENTREE2', 'NREGS2', 'NREGS112'
-    ]
-
-    # 读取数据
-    df = pd.read_csv(data_path, sep=r'\s+', names=columns, header=None)
-
-    # 转换为数值类型，将'.'视作 NaN
-    for col in df.columns:
-        df[col] = pd.to_numeric(df[col], errors='coerce')
-
-    return df
-
-def create_derived_variables(df):
-    """
-    创建派生变量，基于论文中的定义
-    """
-    df = df.copy()
-    
-    # 基础 FTE 就业计算（兼职员工权重为 0.5）
-    df['EMPTOT'] = df['EMPPT'] * 0.5 + df['EMPFT'] + df['NMGRS']
-    df['EMPTOT2'] = df['EMPPT2'] * 0.5 + df['EMPFT2'] + df['NMGRS2']
-    
-    # 就业变化
-    df['DEMP'] = df['EMPTOT2'] - df['EMPTOT']
-    
-    # 比例就业变化（按照论文定义）
-    df['PCHEMPC'] = 2 * (df['EMPTOT2'] - df['EMPTOT']) / (df['EMPTOT2'] + df['EMPTOT'])
-    df.loc[df['EMPTOT2'] == 0, 'PCHEMPC'] = -1  # 关闭店铺设为 -1
-    
-    # 工资差距变量
-    df['gap'] = 0.0
-    mask_nj = df['STATEr'] == 1  # 新泽西州
-    mask_wage_low = df['WAGE_ST'] < 5.05  # 工资低于 5.05
-    mask_wage_pos = df['WAGE_ST'] > 0  # 工资为正数
-    
-    df.loc[mask_nj & mask_wage_low & mask_wage_pos, 'gap'] = (5.05 - df['WAGE_ST']) / df['WAGE_ST']
-    df.loc[~mask_wage_pos, 'gap'] = np.nan
-    
-    # 新泽西州虚拟变量
-    df['nj'] = df['STATEr']
-    
-    # 连锁店虚拟变量
-    df['bk'] = (df['CHAINr'] == 1).astype(int)
-    df['kfc'] = (df['CHAINr'] == 2).astype(int)
-    df['roys'] = (df['CHAINr'] == 3).astype(int)
-    df['wendys'] = (df['CHAINr'] == 4).astype(int)
-    
-    # 关闭状态
-    df['CLOSED'] = (df['STATUS2'] == 3).astype(int)
-    
-    # 工资变化
-    df['dwage'] = df['WAGE_ST2'] - df['WAGE_ST']
-    
-    return df
-
-def prepare_base_sample(df):
-    """
-    准备基础样本（符合 Table 4 的样本条件）
-    基础样本排除临时关闭的店铺（将它们视为缺失数据）
-    """
-    sample = df.copy()
-    
-    # 基础样本排除临时关闭的店铺
-    sample = sample[sample['STATUS2'] != 2]
-    
-    # 基础样本：有效就业数据且有效工资数据（或关闭）
-    sample = sample.dropna(subset=['DEMP'])
-    sample = sample[(sample['CLOSED'] == 1) | 
-                   ((sample['CLOSED'] == 0) & sample['dwage'].notna())]
-    
-    return sample
+# 添加根目录到Python路径以导入utility模块
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import utility as util
+import pandas as pd
+import numpy as np
+import statsmodels.formula.api as smf
 
 def prepare_sample_with_temp_closed(df):
     """
@@ -137,7 +52,6 @@ def create_interview_date_dummies(df):
     
     # 解析日期 (MMDDYY 格式)
     # 为简化起见，我们基于 DATE2 的数值范围创建三个周期虚拟变量
-    # 这是一个近似，因为我们没有具体的日期解析逻辑
     date_vals = df['DATE2'].dropna()
     if len(date_vals) > 0:
         # 将日期值分为三个大致相等的组
@@ -175,7 +89,7 @@ def run_specification_tests(df):
     results = {}
     
     # 1. 基础规范 (Base specification) - 来自 Table 4 模型 (ii) 和 (iv)
-    base_sample = prepare_base_sample(df)
+    base_sample = util.create_analysis_sample(df, include_temp_closed=False)
     
     # 列 (i): Change in employment ~ NJ dummy + controls
     model1_nj = smf.ols('DEMP ~ nj + bk + kfc + roys + CO_OWNED', data=base_sample).fit()
@@ -215,30 +129,22 @@ def run_specification_tests(df):
     results['3_gap_prop'] = smf.ols('PCHEMPC_NO_MGR ~ gap + bk + kfc + roys + CO_OWNED', data=sample3).fit()
     
     # 4. 兼职员工权重为 0.4
-    sample4 = base_sample.copy()
-    sample4['EMPTOT_04'] = sample4['EMPPT'] * 0.4 + sample4['EMPFT'] + sample4['NMGRS']
-    sample4['EMPTOT2_04'] = sample4['EMPPT2'] * 0.4 + sample4['EMPFT2'] + sample4['NMGRS2']
-    sample4['DEMP_04'] = sample4['EMPTOT2_04'] - sample4['EMPTOT_04']
-    sample4['PCHEMPC_04'] = 2 * (sample4['EMPTOT2_04'] - sample4['EMPTOT_04']) / (sample4['EMPTOT2_04'] + sample4['EMPTOT_04'])
-    sample4.loc[sample4['EMPTOT2_04'] == 0, 'PCHEMPC_04'] = -1
+    sample4 = util.create_analysis_sample(util.calculate_fte_employment(df, part_time_weight=0.4), include_temp_closed=False)
+    sample4['PCHEMPC_04'] = util.calculate_proportional_change(sample4)['PCHEMPC']
     
-    results['4_nj'] = smf.ols('DEMP_04 ~ nj + bk + kfc + roys + CO_OWNED', data=sample4).fit()
-    results['4_gap'] = smf.ols('DEMP_04 ~ gap + bk + kfc + roys + CO_OWNED', data=sample4).fit()
-    results['4_nj_prop'] = smf.ols('PCHEMPC_04 ~ nj + bk + kfc + roys + CO_OWNED', data=sample4).fit()
-    results['4_gap_prop'] = smf.ols('PCHEMPC_04 ~ gap + bk + kfc + roys + CO_OWNED', data=sample4).fit()
+    results['4_nj'] = smf.ols('DEMP ~ nj + bk + kfc + roys + CO_OWNED', data=sample4).fit()
+    results['4_gap'] = smf.ols('DEMP ~ gap + bk + kfc + roys + CO_OWNED', data=sample4).fit()
+    results['4_nj_prop'] = smf.ols('PCHEMPC ~ nj + bk + kfc + roys + CO_OWNED', data=sample4).fit()
+    results['4_gap_prop'] = smf.ols('PCHEMPC ~ gap + bk + kfc + roys + CO_OWNED', data=sample4).fit()
     
     # 5. 兼职员工权重为 0.6
-    sample5 = base_sample.copy()
-    sample5['EMPTOT_06'] = sample5['EMPPT'] * 0.6 + sample5['EMPFT'] + sample5['NMGRS']
-    sample5['EMPTOT2_06'] = sample5['EMPPT2'] * 0.6 + sample5['EMPFT2'] + sample5['NMGRS2']
-    sample5['DEMP_06'] = sample5['EMPTOT2_06'] - sample5['EMPTOT_06']
-    sample5['PCHEMPC_06'] = 2 * (sample5['EMPTOT2_06'] - sample5['EMPTOT_06']) / (sample5['EMPTOT2_06'] + sample5['EMPTOT_06'])
-    sample5.loc[sample5['EMPTOT2_06'] == 0, 'PCHEMPC_06'] = -1
+    sample5 = util.create_analysis_sample(util.calculate_fte_employment(df, part_time_weight=0.6), include_temp_closed=False)
+    sample5['PCHEMPC_06'] = util.calculate_proportional_change(sample5)['PCHEMPC']
     
-    results['5_nj'] = smf.ols('DEMP_06 ~ nj + bk + kfc + roys + CO_OWNED', data=sample5).fit()
-    results['5_gap'] = smf.ols('DEMP_06 ~ gap + bk + kfc + roys + CO_OWNED', data=sample5).fit()
-    results['5_nj_prop'] = smf.ols('PCHEMPC_06 ~ nj + bk + kfc + roys + CO_OWNED', data=sample5).fit()
-    results['5_gap_prop'] = smf.ols('PCHEMPC_06 ~ gap + bk + kfc + roys + CO_OWNED', data=sample5).fit()
+    results['5_nj'] = smf.ols('DEMP ~ nj + bk + kfc + roys + CO_OWNED', data=sample5).fit()
+    results['5_gap'] = smf.ols('DEMP ~ gap + bk + kfc + roys + CO_OWNED', data=sample5).fit()
+    results['5_nj_prop'] = smf.ols('PCHEMPC ~ nj + bk + kfc + roys + CO_OWNED', data=sample5).fit()
+    results['5_gap_prop'] = smf.ols('PCHEMPC ~ gap + bk + kfc + roys + CO_OWNED', data=sample5).fit()
     
     # 6. 排除新泽西海岸地区的店铺
     sample6 = base_sample[base_sample['SHORE'] != 1].copy()
@@ -307,14 +213,6 @@ def run_specification_tests(df):
     
     return results
 
-def format_coefficient(coef, se):
-    """
-    格式化系数和标准误
-    """
-    if pd.isna(coef) or pd.isna(se):
-        return ""
-    return f"{coef:.2f} ({se:.2f})"
-
 def generate_table_5(results):
     """
     生成 Table 5 的 Markdown 格式输出
@@ -351,7 +249,7 @@ def generate_table_5(results):
         if key in results and 'nj' in results[key].params:
             coef = results[key].params['nj']
             se = results[key].bse['nj']
-            row_data.append(format_coefficient(coef, se))
+            row_data.append(util.format_coefficient(coef, se))
         else:
             row_data.append("")
         
@@ -362,7 +260,7 @@ def generate_table_5(results):
             if gap_var in results[gap_key].params:
                 coef = results[gap_key].params[gap_var]
                 se = results[gap_key].bse[gap_var]
-                row_data.append(format_coefficient(coef, se))
+                row_data.append(util.format_coefficient(coef, se))
             else:
                 row_data.append("")
         else:
@@ -373,7 +271,7 @@ def generate_table_5(results):
         if prop_key in results and 'nj' in results[prop_key].params:
             coef = results[prop_key].params['nj']
             se = results[prop_key].bse['nj']
-            row_data.append(format_coefficient(coef, se))
+            row_data.append(util.format_coefficient(coef, se))
         else:
             row_data.append("")
         
@@ -384,31 +282,31 @@ def generate_table_5(results):
             if gap_var in results[gap_prop_key].params:
                 coef = results[gap_prop_key].params[gap_var]
                 se = results[gap_prop_key].bse[gap_var]
-                row_data.append(format_coefficient(coef, se))
+                row_data.append(util.format_coefficient(coef, se))
             else:
                 row_data.append("")
         else:
             row_data.append("")
         
-        # 构建表格行 - 修复格式问题
+        # 构建表格行
         line = f"| {row_data[0]:<53} | {row_data[1]:>12} | {row_data[2]:>12} | {row_data[3]:>17} | {row_data[4]:>12} |"
         lines.append(line)
     
     # 添加注释
     lines.extend([
         "",
-        "Notes: Standard errors are given in parentheses. [cite: 222] Entries represent estimated coefficient of New Jersey dummy [columns (i) and (iii)] or initial wage gap [columns (ii) and (iv)] in regression models for the change in employment or the percentage change in employment. [cite: 223] All models also include chain dummies and an indicator for company-owned stores. [cite: 224]",
-        "ª Wave-2 employment at four temporarily closed stores is set to 0 (rather than missing). [cite: 225]",
-        "ᵇ Full-time equivalent employment excludes managers and assistant managers. [cite: 226]",
-        "ᶜ Full-time equivalent employment equals number of managers, assistant managers, and full-time nonmanagement workers, plus 0.4 times the number of part-time nonmanagement workers. [cite: 226]",
-        "ᵈ Full-time equivalent employment equals number of managers, assistant managers, and full-time nonmanagement workers, plus 0.6 times the number of part-time nonmanagement workers. [cite: 227]",
-        "e Sample excludes 35 stores located in towns along the New Jersey shore. [cite: 228]",
-        "f Models include three dummy variables identifying week of wave-2 interview in November-December 1992. [cite: 229]",
+        "Notes: Standard errors are given in parentheses. Entries represent estimated coefficient of New Jersey dummy [columns (i) and (iii)] or initial wage gap [columns (ii) and (iv)] in regression models for the change in employment or the percentage change in employment. All models also include chain dummies and an indicator for company-owned stores.",
+        "ª Wave-2 employment at four temporarily closed stores is set to 0 (rather than missing).",
+        "ᵇ Full-time equivalent employment excludes managers and assistant managers.",
+        "ᶜ Full-time equivalent employment equals number of managers, assistant managers, and full-time nonmanagement workers, plus 0.4 times the number of part-time nonmanagement workers.",
+        "ᵈ Full-time equivalent employment equals number of managers, assistant managers, and full-time nonmanagement workers, plus 0.6 times the number of part-time nonmanagement workers.",
+        "e Sample excludes 35 stores located in towns along the New Jersey shore.",
+        "f Models include three dummy variables identifying week of wave-2 interview in November-December 1992.",
         "ᵍ Sample excludes 70 stores (69 in New Jersey) that were contacted three or more times before obtaining the wave-1 interview.",
-        "ʰ Regression model is estimated by weighted least squares, using employment in wave 1 as a weight. [cite: 230]",
-        "ⁱ Subsample of 51 stores in towns around Newark. [cite: 231]",
+        "ʰ Regression model is estimated by weighted least squares, using employment in wave 1 as a weight.",
+        "ⁱ Subsample of 51 stores in towns around Newark.",
         "ʲ Subsample of 54 stores in town around Camden.",
-        "ᵏ Subsample of Pennsylvania stores only. Wage gap is defined as percentage increase in starting wage necessary to raise starting wage to $5.05. [cite: 232]"
+        "ᵏ Subsample of Pennsylvania stores only. Wage gap is defined as percentage increase in starting wage necessary to raise starting wage to $5.05."
     ])
     
     return "\n".join(lines)
@@ -417,11 +315,11 @@ def main():
     """
     主函数：执行完整的 Table 5 复现
     """
-    # 加载数据
-    df = load_data()
+    # 使用utility模块加载数据
+    df = util.read_data()
     
-    # 创建派生变量
-    df = create_derived_variables(df)
+    # 使用utility模块创建派生变量
+    df = util.create_basic_derived_variables(df)
     
     # 运行所有规范测试
     results = run_specification_tests(df)
@@ -431,15 +329,8 @@ def main():
     print(table_output)
     
     # 保存到文件
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    output_path = os.path.join(script_dir, 'output.md')
-    
-    try:
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(table_output)
-        print(f"\nResults saved to {output_path}")
-    except Exception as e:
-        print(f"\nWarning: Could not save results to file: {e}")
+    output_path = util.get_output_path(__file__)
+    util.save_output_to_file(table_output, output_path)
 
 if __name__ == "__main__":
     main() 

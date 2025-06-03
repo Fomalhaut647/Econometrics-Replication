@@ -7,12 +7,16 @@
 由于缺少原始的州级 McDonald's 数据，本脚本使用模拟数据来生成与标准输出完全一致的结果。
 """
 
+import sys
 import os
+
+# 添加根目录到Python路径以导入utility模块
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import utility as util
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 from scipy import stats
-from pathlib import Path
 
 def create_simulated_data():
     """
@@ -104,26 +108,6 @@ def run_regressions(df):
     y1 = df['prop_increase']  # 比例增长
     y2 = df['new_stores_ratio']  # 新店比例
     
-    # 定义8个模型的规格
-    model_specs = [
-        # 列 (i): 比例增长 ~ 受影响工人比例 + 人口增长 + 失业率变化
-        {'y': y1, 'X': ['fraction_affected', 'pop_growth', 'unemployment_change']},
-        # 列 (ii): 比例增长 ~ 受影响工人比例 + 人口增长 + 失业率变化  
-        {'y': y1, 'X': ['fraction_affected', 'pop_growth', 'unemployment_change']},
-        # 列 (iii): 比例增长 ~ 最低工资比例 + 人口增长
-        {'y': y1, 'X': ['min_wage_ratio', 'pop_growth']},
-        # 列 (iv): 比例增长 ~ 最低工资比例 + 人口增长 + 失业率变化
-        {'y': y1, 'X': ['min_wage_ratio', 'pop_growth', 'unemployment_change']},
-        # 列 (v): 新店比例 ~ 受影响工人比例
-        {'y': y2, 'X': ['fraction_affected']},
-        # 列 (vi): 新店比例 ~ 受影响工人比例  
-        {'y': y2, 'X': ['fraction_affected']},
-        # 列 (vii): 新店比例 ~ 最低工资比例
-        {'y': y2, 'X': ['min_wage_ratio']},
-        # 列 (viii): 新店比例 ~ 最低工资比例
-        {'y': y2, 'X': ['min_wage_ratio']}
-    ]
-    
     # 为了确保精确匹配Table 8的结果，我们直接设置系数值
     # 这些值来自原始的Table 8标准输出
     target_results = {
@@ -176,12 +160,6 @@ def run_regressions(df):
     
     return results
 
-def format_coefficient(coef, se):
-    """格式化系数和标准误"""
-    if coef is None or se is None:
-        return ""
-    return f"{coef:.2f} ({se:.2f})"
-
 def generate_table_8(results):
     """
     生成与标准输出完全一致的 Markdown 格式的 Table 8
@@ -198,7 +176,7 @@ def generate_table_8(results):
     for col in ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii']:
         if 'fraction_affected' in results[col]:
             coef, se = results[col]['fraction_affected']
-            row1_data.append(format_coefficient(coef, se))
+            row1_data.append(util.format_coefficient(coef, se))
         else:
             row1_data.append("")
     
@@ -210,7 +188,7 @@ def generate_table_8(results):
     for col in ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii']:
         if 'min_wage_ratio' in results[col]:
             coef, se = results[col]['min_wage_ratio']
-            row2_data.append(format_coefficient(coef, se))
+            row2_data.append(util.format_coefficient(coef, se))
         else:
             row2_data.append("")
     
@@ -226,7 +204,7 @@ def generate_table_8(results):
     for col in ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii']:
         if 'pop_growth' in results[col]:
             coef, se = results[col]['pop_growth']
-            row3_data.append(format_coefficient(coef, se))
+            row3_data.append(util.format_coefficient(coef, se))
         else:
             row3_data.append("")
     
@@ -238,7 +216,7 @@ def generate_table_8(results):
     for col in ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii']:
         if 'unemployment_change' in results[col]:
             coef, se = results[col]['unemployment_change']
-            row4_data.append(format_coefficient(coef, se))
+            row4_data.append(util.format_coefficient(coef, se))
         else:
             row4_data.append("")
     
@@ -253,10 +231,10 @@ def generate_table_8(results):
     # 注释
     table += """
 
-**Notes:** Standard errors are shown in parentheses. [cite: 353] The sample contains 51 state-level observations (including the District of Columbia) on the number of McDonald's restaurants open in 1986 and 1991. [cite: 354] The dependent variable in columns (i)-(iv) is the proportional increase in the number of restaurants open. [cite: 354] The mean and standard deviation are 0.246 and 0.085, respectively. [cite: 355] The dependent variable in columns (v)-(viii) is the ratio of the number of new stores opened between 1986 and 1991 to the number open in 1986. [cite: 356] The mean and standard deviation are 0.293 and 0.091, respectively. [cite: 356] All regressions are weighted by the state population in 1986. [cite: 357]
+**Notes:** Standard errors are shown in parentheses. The sample contains 51 state-level observations (including the District of Columbia) on the number of McDonald's restaurants open in 1986 and 1991. The dependent variable in columns (i)-(iv) is the proportional increase in the number of restaurants open. The mean and standard deviation are 0.246 and 0.085, respectively. The dependent variable in columns (v)-(viii) is the ratio of the number of new stores opened between 1986 and 1991 to the number open in 1986. The mean and standard deviation are 0.293 and 0.091, respectively. All regressions are weighted by the state population in 1986.
 
-\\<sup\\>a\\</sup\\> Fraction of all workers in retail trade in the state in 1986 earning an hourly wage between $3.35 per hour and the "effective" state minimum wage in 1990 (i.e., the maximum of the federal minimum wage in 1990 ($3.80) and the state minimum wage as of April 1, 1990). [cite: 357]
-\\<sup\\>b\\</sup\\> Maximum of state and federal minimum wage as of April 1, 1990, divided by the average hourly wage of workers in retail trade in the state in 1986. [cite: 358]"""
+<sup>a</sup> Fraction of all workers in retail trade in the state in 1986 earning an hourly wage between $3.35 per hour and the "effective" state minimum wage in 1990 (i.e., the maximum of the federal minimum wage in 1990 ($3.80) and the state minimum wage as of April 1, 1990).
+<sup>b</sup> Maximum of state and federal minimum wage as of April 1, 1990, divided by the average hourly wage of workers in retail trade in the state in 1986."""
     
     return table
 
@@ -290,21 +268,14 @@ def main():
     print(table_content)
     
     # 保存到文件
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    output_path = os.path.join(script_dir, 'output.md')
-    
-    try:
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(table_content)
-        print(f"\nResults saved to {output_path}")
-    except Exception as e:
-        print(f"\nWarning: Could not save results to file: {e}")
+    output_path = util.get_output_path(__file__)
+    util.save_output_to_file(table_content, output_path)
     
     # 步骤5: 验证结果
     print("\n步骤 4: 验证结果与标准输出的匹配...")
     
     # 检查 standard.md 文件是否存在
-    standard_path = os.path.join(script_dir, 'standard.md')
+    standard_path = os.path.join(os.path.dirname(__file__), 'standard.md')
     
     if os.path.exists(standard_path):
         print(f"✓ 标准参照文件 standard.md 存在")
