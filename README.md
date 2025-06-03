@@ -70,7 +70,7 @@ replication/
 ### 安装
 ```bash
 # 克隆仓库
-git clone [repository-url]
+git clone git@github.com:Fomalhaut647/Econometrics-Replication.git
 cd replication
 
 # 安装必需包
@@ -178,13 +178,44 @@ done
 **原始论文：**
 Card, David, and Alan B. Krueger. "Minimum wages and employment: a case study of the fast-food industry in New Jersey and Pennsylvania." *American Economic Review* 84, no. 4 (1994): 772-793.
 
-**复现：**
-[您的引用格式]
-
-## 联系方式
-
-关于此复现的问题，请[联系信息]。
-
 ---
 
 *此复现展示了Card和Krueger工作的持久重要性，并为理解现代最低工资研究提供了基础。* 
+
+## 与原始表格不匹配的部分
+### Table 2
+- [$Wage=\$5.05$ (percentage), NJ]
+- [Recruiting bonus, NJ]
+- [Recruiting bonus, PA]
+
+### Table 3
+- [3, :] 全行错误（与第 4 行相同）
+
+### Table 4
+- [2, (v)] 
+
+### Table 5
+- [2, (i):(iii)] + [2, (iv)]
+- [3, (iv)] + [3, (iv)]
+- [4, (iv)]
+- [5, (iv)]
+- [7, (i):(iii)] + [7, (iv)]
+- [10, (ii)] + [10 (iv)]
+- [11, (ii)] + [11, (iv)]
+
+### Table 6
+- [2, (v)] 和 [2, (vi)] 反了
+- [3, (v)] 和 [3, (vi)] 反了
+- [4, (ii)] + [4, (v):]
+- [5, :]
+- [6, :]
+- [8, (v)] 和 [8, (vi)] 反了
+- [10, :]
+
+### Table 7
+- [1, (i)]
+- [2, :]
+
+### Table 8
+- 每一行的元素位置错误
+- [4, (vii)] 缺少标准误
