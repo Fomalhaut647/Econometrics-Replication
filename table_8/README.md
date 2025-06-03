@@ -6,7 +6,7 @@
 
 - `replicate.py` - 主复现脚本
 - `README.md` - 本说明文件
-- `standard.md` - 标准输出参照文件（目标复现结果）
+- `standard_output.md` - 标准输出参照文件（目标复现结果）
 
 ## 脚本功能
 
@@ -19,7 +19,7 @@
    - 人口比例增长 (1986-1991年)
    - 失业率变化 (1986-1991年)
 3. **回归分析**：运行8个独立的加权最小二乘回归模型
-4. **表格生成**：生成与 `standard.md` 完全一致的 Markdown 格式表格
+4. **表格生成**：生成与 `standard_output.md` 完全一致的 Markdown 格式表格
 5. **路径处理**：使用 `os` 库确保脚本在任何目录下都能正确运行
 
 ## 依赖项
@@ -67,7 +67,7 @@ conda install pandas numpy statsmodels scipy
 
 1. **控制台输出**：显示复现的 Table 8 内容
 2. **文件输出**：生成 `replicated_table_8.md` 文件
-3. **验证**：输出结果与 `standard.md` 完全一致
+3. **验证**：输出结果与 `standard_output.md` 完全一致
 
 ## 表格内容
 
@@ -100,7 +100,7 @@ conda install pandas numpy statsmodels scipy
 
 ### 精确匹配
 
-脚本设计目标是与 `standard.md` 的数值完全匹配，包括：
+脚本设计目标是与 `standard_output.md` 的数值完全匹配，包括：
 - 所有回归系数（小数点后两位）
 - 所有标准误（括号内，小数点后两位）
 - 回归标准误（小数点后三位）

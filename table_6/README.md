@@ -6,7 +6,7 @@
 
 -   `replicate.py` - 主要的复现脚本
 -   `output.md` - 复现脚本生成的输出文件
--   `standard.md` - 标准参考输出文件（请勿修改）
+-   `standard_output.md` - 标准参考输出文件（请勿修改）
 -   `README.md` - 本说明文件
 
 ## 描述
@@ -62,7 +62,7 @@ python table_6/replicate.py
 ```
 
 ### 预期输出
-脚本会将 Markdown 格式的表格输出到标准输出 (stdout)，该表格与 `standard.md` 的内容高度匹配。输出包括：
+脚本会将 Markdown 格式的表格输出到标准输出 (stdout)，该表格与 `standard_output.md` 的内容高度匹配。输出包括：
 
 1.  **表格标题**：均值变化和回归结果的列定义
 2.  **店铺特征** (第1-4行)：经营变量的分析
@@ -105,7 +105,7 @@ python table_6/replicate.py
 
 ## 复现质量
 
-输出在以下方面与 `standard.md` 高度匹配：
+输出在以下方面与 `standard_output.md` 高度匹配：
 -   大多数变量的数值和精度
 -   标准误计算
 -   表格结构和格式

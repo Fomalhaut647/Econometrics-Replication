@@ -5,7 +5,7 @@
 ## 文件说明
 
 - **`replicate.py`** - 主复现脚本，包含所有 12 个规范测试的实现
-- **`standard.md`** - 原论文 Table 5 的标准格式参考
+- **`standard_output.md`** - 原论文 Table 5 的标准格式参考
 - **`README.md`** - 本说明文件
 
 ## 脚本功能

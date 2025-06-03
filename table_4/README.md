@@ -7,7 +7,7 @@
 ## 文件说明
 
 - `replicate.py`: 主要的复现脚本
-- `standard.md`: 原论文中的标准 Table 4 格式
+- `standard_output.md`: 原论文中的标准 Table 4 格式
 - `README.md`: 本说明文件
 
 ## 脚本功能
@@ -57,7 +57,7 @@ Notes: Standard errors are given in parentheses. The sample consists of 357 stor
 
 ## 与标准表格的比较
 
-### 标准表格（来自 `standard.md`）：
+### 标准表格（来自 `standard_output.md`）：
 
 | Independent variable                       | Model (i)   | Model (ii)  | Model (iii) | Model (iv)  | Model (v)   |
 | :----------------------------------------- | :---------- | :---------- | :---------- | :---------- | :---------- |

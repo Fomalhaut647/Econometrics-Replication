@@ -6,7 +6,7 @@
 
 - `replicate.py` - 复现表 7 的主要 Python 脚本
 - `README.md` - 本文档文件
-- `standard.md` - 用于比较的标准输出表示例（请勿修改）
+- `standard_output.md` - 用于比较的标准输出表示例（请勿修改）
 
 ## 描述
 
@@ -74,4 +74,4 @@ python replicate.py
 
 ## 验证
 
-将输出与 `standard.md` 进行比较，以验证复现的准确性。结果应在系数、标准误和回归诊断方面与已发表的表格高度匹配。
+将输出与 `standard_output.md` 进行比较，以验证复现的准确性。结果应在系数、标准误和回归诊断方面与已发表的表格高度匹配。
