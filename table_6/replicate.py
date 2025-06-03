@@ -230,8 +230,8 @@ def generate_table_6(df):
     
     # 开始构建表格
     table_lines = []
-    table_lines.append("| Outcome measure | Mean change in outcome | | | Regression of change in outcome variable on: | |")
-    table_lines.append("|---|---|---|---|---|---|")
+    table_lines.append("| Outcome measure | Mean change in outcome | | | Regression of change in outcome variable on: | | |")
+    table_lines.append("|---|---|---|---|---|---|---|")
     table_lines.append("| | NJ (i) | PA (ii) | NJ-PA (iii) | NJ dummy (iv) | Wage gapª (v) | Wage gapᵇ (vi) |")
     
     # 添加商店特征部分

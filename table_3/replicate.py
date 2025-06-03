@@ -498,7 +498,7 @@ def generate_table_3(df, output_file=None):
     row5_diffs = calculate_differences(row5_data)
     
     # 表头
-    header = "| Variable | NJ (i) | PA (ii) | Difference, NJ-PA (iii) | NJ Wage = $4.25 (iv) | NJ Wage = $4.26-$4.99 (v) | NJ Wage >= $5.00 (vi) | Diff Low-high (vii)<sup>b</sup> | Diff Midrange-high (viii)<sup>b</sup> |"
+    header = "| Variable | PA (i) | NJ (ii) | Difference, NJ-PA (iii) | NJ Wage = $4.25 (iv) | NJ Wage = $4.26-$4.99 (v) | NJ Wage >= $5.00 (vi) | Diff Low-high (vii)<sup>b</sup> | Diff Midrange-high (viii)<sup>b</sup> |"
     separator = "| :----------------------------------------------------------------------- | :------------ | :------------ | :---------------------- | :------------------- | :------------------------ | :-------------------- | :-------------------------- | :---------------------------- |"
     
     output_lines.append(header)
@@ -506,24 +506,24 @@ def generate_table_3(df, output_file=None):
     
     # 第1行
     row1 = rows_1_2_data['row1']
-    line1 = f"| 1. FTE employment before, all available observations<sup>a</sup> | {format_number(*row1['nj'])} | {format_number(*row1['pa'])} | {format_number(*row1_diffs['nj_pa'])} | {format_number(*row1['nj_low'])} | {format_number(*row1['nj_mid'])} | {format_number(*row1['nj_high'])} | {format_number(*row1_diffs['low_high'])} | {format_number(*row1_diffs['mid_high'])} |"
+    line1 = f"| 1. FTE employment before, all available observations<sup>a</sup> | {format_number(*row1['pa'])} | {format_number(*row1['nj'])} | {format_number(*row1_diffs['nj_pa'])} | {format_number(*row1['nj_low'])} | {format_number(*row1['nj_mid'])} | {format_number(*row1['nj_high'])} | {format_number(*row1_diffs['low_high'])} | {format_number(*row1_diffs['mid_high'])} |"
     output_lines.append(line1)
     
     # 第2行
     row2 = rows_1_2_data['row2']
-    line2 = f"| 2. FTE employment after, all available observations<sup>a</sup> | {format_number(*row2['nj'])} | {format_number(*row2['pa'])} | {format_number(*row2_diffs['nj_pa'])} | {format_number(*row2['nj_low'])} | {format_number(*row2['nj_mid'])} | {format_number(*row2['nj_high'])} | {format_number(*row2_diffs['low_high'])} | {format_number(*row2_diffs['mid_high'])} |"
+    line2 = f"| 2. FTE employment after, all available observations<sup>a</sup> | {format_number(*row2['pa'])} | {format_number(*row2['nj'])} | {format_number(*row2_diffs['nj_pa'])} | {format_number(*row2['nj_low'])} | {format_number(*row2['nj_mid'])} | {format_number(*row2['nj_high'])} | {format_number(*row2_diffs['low_high'])} | {format_number(*row2_diffs['mid_high'])} |"
     output_lines.append(line2)
     
     # 第3行
-    line3 = f"| 3. Change in mean FTE employment | {format_number(*row3_data['nj'])} | {format_number(*row3_data['pa'])} | {format_number(*row3_diffs['nj_pa'])} | {format_number(*row3_data['nj_low'])} | {format_number(*row3_data['nj_mid'])} | {format_number(*row3_data['nj_high'])} | {format_number(*row3_diffs['low_high'])} | {format_number(*row3_diffs['mid_high'])} |"
+    line3 = f"| 3. Change in mean FTE employment | {format_number(*row3_data['pa'])} | {format_number(*row3_data['nj'])} | {format_number(*row3_diffs['nj_pa'])} | {format_number(*row3_data['nj_low'])} | {format_number(*row3_data['nj_mid'])} | {format_number(*row3_data['nj_high'])} | {format_number(*row3_diffs['low_high'])} | {format_number(*row3_diffs['mid_high'])} |"
     output_lines.append(line3)
     
     # 第4行
-    line4 = f"| 4. Change in mean FTE employment, balanced sample of stores<sup>c</sup> | {format_number(*row4_data['nj'])} | {format_number(*row4_data['pa'])} | {format_number(*row4_diffs['nj_pa'])} | {format_number(*row4_data['nj_low'])} | {format_number(*row4_data['nj_mid'])} | {format_number(*row4_data['nj_high'])} | {format_number(*row4_diffs['low_high'])} | {format_number(*row4_diffs['mid_high'])} |"
+    line4 = f"| 4. Change in mean FTE employment, balanced sample of stores<sup>c</sup> | {format_number(*row4_data['pa'])} | {format_number(*row4_data['nj'])} | {format_number(*row4_diffs['nj_pa'])} | {format_number(*row4_data['nj_low'])} | {format_number(*row4_data['nj_mid'])} | {format_number(*row4_data['nj_high'])} | {format_number(*row4_diffs['low_high'])} | {format_number(*row4_diffs['mid_high'])} |"
     output_lines.append(line4)
     
     # 第5行
-    line5 = f"| 5. Change in mean FTE employment, setting FTE at temporarily closed stores to 0<sup>d</sup> | {format_number(*row5_data['nj'])} | {format_number(*row5_data['pa'])} | {format_number(*row5_diffs['nj_pa'])} | {format_number(*row5_data['nj_low'])} | {format_number(*row5_data['nj_mid'])} | {format_number(*row5_data['nj_high'])} | {format_number(*row5_diffs['low_high'])} | {format_number(*row5_diffs['mid_high'])} |"
+    line5 = f"| 5. Change in mean FTE employment, setting FTE at temporarily closed stores to 0<sup>d</sup> | {format_number(*row5_data['pa'])} | {format_number(*row5_data['nj'])} | {format_number(*row5_diffs['nj_pa'])} | {format_number(*row5_data['nj_low'])} | {format_number(*row5_data['nj_mid'])} | {format_number(*row5_data['nj_high'])} | {format_number(*row5_diffs['low_high'])} | {format_number(*row5_diffs['mid_high'])} |"
     output_lines.append(line5)
     
     output_lines.append("")

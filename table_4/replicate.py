@@ -150,11 +150,14 @@ def calculate_f_test_pvalue(model, control_vars):
 def format_table(results, sample_size):
     """
     将结果格式化为与标准表格4布局完全一致
+    Formats the results to exactly match the layout of the standard Table 4
     """
     # 首先是表格标题
-    title = "**表格4-就业变化的简化式模型**"
+    # First, the table title
+    title = "**TABLE 4-REDUCED-FORM MODELS FOR CHANGE IN EMPLOYMENT**"
 
     # 提取系数和标准误
+    # Extract coefficients and standard errors
     def get_coef_se(model, var):
         if var in model.params.index:
             coef = model.params[var]
@@ -163,10 +166,12 @@ def format_table(results, sample_size):
         return None, None
 
     # 初始化表格数据
+    # Initialize table data
     table_data = []
 
     # 第1行: 新泽西州虚拟变量
-    row1 = ['1. 新泽西州虚拟变量']
+    # Row 1: New Jersey dummy
+    row1 = ['1. New Jersey dummy']
     nj_coef1, nj_se1 = get_coef_se(results['model1'], 'nj')
     nj_coef2, nj_se2 = get_coef_se(results['model2'], 'nj')
 
@@ -178,8 +183,9 @@ def format_table(results, sample_size):
     table_data.append(row1)
 
     # 第2行: 初始工资差距
-    row2 = ['2. 初始工资差距<sup>a</sup>']
-    row2.extend(["", ""])  # 模型 (i) 和 (ii) 中没有差距变量
+    # Row 2: Initial wage gap
+    row2 = ['2. Initial wage gap<sup>a</sup>']
+    row2.extend(["", ""])  # 模型 (i) 和 (ii) 中没有差距变量 # No gap variable in Models (i) and (ii)
 
     gap_coef3, gap_se3 = get_coef_se(results['model3'], 'gap')
     gap_coef4, gap_se4 = get_coef_se(results['model4'], 'gap')
@@ -193,17 +199,20 @@ def format_table(results, sample_size):
     table_data.append(row2)
 
     # 第3行: 连锁店和所有权控制变量
-    row3 = ['3. 连锁店和所有权控制变量<sup>b</sup>']
-    row3.extend(['否', '是', '否', '是', '是'])
+    # Row 3: Controls for chain and ownership
+    row3 = ['3. Controls for chain and ownership<sup>b</sup>']
+    row3.extend(['no', 'yes', 'no', 'yes', 'yes']) # Changed to English
     table_data.append(row3)
 
     # 第4行: 区域控制变量
-    row4 = ['4. 区域控制变量<sup>c</sup>']
-    row4.extend(['否', '否', '否', '否', '是'])
+    # Row 4: Controls for region
+    row4 = ['4. Controls for region<sup>c</sup>']
+    row4.extend(['no', 'no', 'no', 'no', 'yes']) # Changed to English
     table_data.append(row4)
 
     # 第5行: 回归标准误
-    row5 = ['5. 回归标准误']
+    # Row 5: Standard error of regression
+    row5 = ['5. Standard error of regression']
     row5.extend([
         f"{results['model1'].scale**0.5:.2f}",
         f"{results['model2'].scale**0.5:.2f}",
@@ -214,21 +223,25 @@ def format_table(results, sample_size):
     table_data.append(row5)
 
     # 第6行: 控制变量的概率值
-    row6 = ['6. 控制变量的概率值<sup>d</sup>']
-    row6.append("")  # 模型 (i) 没有控制变量
+    # Row 6: Probability value for controls
+    row6 = ['6. Probability value for controls<sup>d</sup>']
+    row6.append("")  # 模型 (i) 没有控制变量 # Model (i) has no control variables
 
     # 模型 (ii) 的 F 检验 - 连锁店和所有权控制变量
+    # F test for Model (ii) - Chain and ownership controls
     chain_controls = ['bk', 'kfc', 'roys', 'CO_OWNED']
     p_val2 = calculate_f_test_pvalue(results['model2'], chain_controls)
     row6.append(f"{p_val2:.2f}" if p_val2 is not None else "")
 
-    row6.append("")  # 模型 (iii) 没有控制变量
+    row6.append("")  # 模型 (iii) 没有控制变量 # Model (iii) has no control variables
 
     # 模型 (iv) 的 F 检验 - 连锁店和所有权控制变量
+    # F test for Model (iv) - Chain and ownership controls
     p_val4 = calculate_f_test_pvalue(results['model4'], chain_controls)
     row6.append(f"{p_val4:.2f}" if p_val4 is not None else "")
 
     # 模型 (v) 的 F 检验 - 所有控制变量
+    # F test for Model (v) - All control variables
     all_controls = ['bk', 'kfc', 'roys', 'CO_OWNED', 'CENTRALJ', 'SOUTHJ', 'PA1', 'PA2']
     p_val5 = calculate_f_test_pvalue(results['model5'], all_controls)
     row6.append(f"{p_val5:.2f}" if p_val5 is not None else "")
@@ -236,23 +249,27 @@ def format_table(results, sample_size):
     table_data.append(row6)
 
     # 创建 markdown 表格
-    header = "| 自变量                                     | 模型 (i)   | 模型 (ii)  | 模型 (iii)  | 模型 (iv)  | 模型 (v)   |"
+    # Create markdown table
+    header = "| Independent variable                       | Model (i)   | Model (ii)  | Model (iii) | Model (iv)  | Model (v)   |" # Changed to English
     separator = "| :----------------------------------------- | :---------- | :---------- | :---------- | :---------- | :---------- |"
 
     table_lines = [title, "", header, separator]
     for row in table_data:
-        line = "| " + " | ".join(f"{cell:<10}" for cell in row) + " |" # 左对齐单元格内容并设置宽度
+        # Adjust formatting slightly for English text width
+        # Use a fixed width for the first column and left align others
+        line = f"| {row[0]:<42} | {' | '.join(f'{cell:<11}' for cell in row[1:])} |"
         table_lines.append(line)
 
     # 添加注释
+    # Add notes
     notes = [
         "",
-        f"注：标准误在括号中给出。样本包含 {sample_size} 家在第1波和第2波调查中具有就业和起始工资有效数据的商店。所有模型中的因变量均为全职等效就业人数 (FTE) 的变化。因变量的均值和标准差分别为 {results['model1'].model.endog.mean():.3f} 和 {results['model1'].model.endog.std():.3f}。所有模型均包含一个未报告的无约束常数项。",
+        f"Notes: Standard errors are given in parentheses. The sample consists of {sample_size} stores with available data on employment and starting wages in waves 1 and 2. The dependent variable in all models is change in FTE employment. The mean and standard deviation of the dependent variable are {results['model1'].model.endog.mean():.3f} and {results['model1'].model.endog.std():.3f}, respectively. All models include an unrestricted constant (not reported).", # Changed to English and updated mean/std values
         "",
-        "<sup>a</sup> 将起始工资提高到新的最低工资标准所需的起始工资的比例增幅。对于宾夕法尼亚州的商店，工资差距为0。",
-        "<sup>b</sup> 包括三个连锁类型的虚拟变量以及商店是否为公司所有。",
-        "<sup>c</sup> 包括新泽西州两个地区和宾夕法尼亚州东部两个地区的虚拟变量。",
-        "<sup>d</sup> 排除所有控制变量的联合 F 检验的概率值。"
+        "<sup>a</sup> Proportional increase in starting wage necessary to raise starting wage to new minimum rate. For stores in Pennsylvania the wage gap is 0.", # Changed to English
+        "<sup>b</sup> Three dummy variables for chain type and whether or not the store is company-owned are included.", # Changed to English
+        "<sup>c</sup> Dummy variables for two regions of New Jersey and two regions of eastern Pennsylvania are included.", # Changed to English
+        "<sup>d</sup> Probability value of joint F test for exclusion of all control variables." # Changed to English
     ]
 
     return "\n".join(table_lines + notes)
@@ -260,23 +277,28 @@ def format_table(results, sample_size):
 def main():
     """
     主函数，用于复制表格4
+    Main function to replicate Table 4
     """
     # 加载和处理数据
+    # Load and process data
     df = load_data()
     df = create_variables(df)
     sample = create_analysis_sample(df)
 
     # 运行回归
+    # Run regressions
     results = run_regressions(sample)
 
     # 格式化并打印表格
+    # Format and print the table
     table_output = format_table(results, len(sample))
     print(table_output)
-    
+
     # 保存到文件
+    # Save to file
     script_dir = os.path.dirname(os.path.abspath(__file__))
     output_path = os.path.join(script_dir, 'output.md')
-    
+
     try:
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(table_output)

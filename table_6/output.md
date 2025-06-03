@@ -1,5 +1,5 @@
-| Outcome measure | Mean change in outcome | | | Regression of change in outcome variable on: | |
-|---|---|---|---|---|---|
+| Outcome measure | Mean change in outcome | | | Regression of change in outcome variable on: | | |
+|---|---|---|---|---|---|---|
 | | NJ (i) | PA (ii) | NJ-PA (iii) | NJ dummy (iv) | Wage gapª (v) | Wage gapᵇ (vi) |
 | **Store Characteristics:** | | | | | | |
 | 1. Fraction full-time workers (percentage)ᶜ | 2.65 (1.71) | -4.65 (3.80) | 7.30 (4.17) | 7.30 (3.95) | 33.64 (20.95) | 20.28 (24.35) |

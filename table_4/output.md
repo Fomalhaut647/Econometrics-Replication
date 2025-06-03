@@ -1,17 +1,17 @@
-**表格4-就业变化的简化式模型**
+**TABLE 4-REDUCED-FORM MODELS FOR CHANGE IN EMPLOYMENT**
 
-| 自变量                                     | 模型 (i)   | 模型 (ii)  | 模型 (iii)  | 模型 (iv)  | 模型 (v)   |
+| Independent variable                       | Model (i)   | Model (ii)  | Model (iii) | Model (iv)  | Model (v)   |
 | :----------------------------------------- | :---------- | :---------- | :---------- | :---------- | :---------- |
-| 1. 新泽西州虚拟变量 | 2.33 (1.19) | 2.30 (1.20) |            |            |            |
-| 2. 初始工资差距<sup>a</sup> |            |            | 15.65 (6.08) | 14.92 (6.21) | 11.98 (7.42) |
-| 3. 连锁店和所有权控制变量<sup>b</sup> | 否          | 是          | 否          | 是          | 是          |
-| 4. 区域控制变量<sup>c</sup> | 否          | 否          | 否          | 否          | 是          |
-| 5. 回归标准误   | 8.79       | 8.78       | 8.76       | 8.76       | 8.75       |
-| 6. 控制变量的概率值<sup>d</sup> |            | 0.34       |            | 0.44       | 0.40       |
+| 1. New Jersey dummy                        | 2.33 (1.19) | 2.30 (1.20) |             |             |             |
+| 2. Initial wage gap<sup>a</sup>            |             |             | 15.65 (6.08) | 14.92 (6.21) | 11.98 (7.42) |
+| 3. Controls for chain and ownership<sup>b</sup> | no          | yes         | no          | yes         | yes         |
+| 4. Controls for region<sup>c</sup>         | no          | no          | no          | no          | yes         |
+| 5. Standard error of regression            | 8.79        | 8.78        | 8.76        | 8.76        | 8.75        |
+| 6. Probability value for controls<sup>d</sup> |             | 0.34        |             | 0.44        | 0.40        |
 
-注：标准误在括号中给出。样本包含 357 家在第1波和第2波调查中具有就业和起始工资有效数据的商店。所有模型中的因变量均为全职等效就业人数 (FTE) 的变化。因变量的均值和标准差分别为 -0.238 和 8.813。所有模型均包含一个未报告的无约束常数项。
+Notes: Standard errors are given in parentheses. The sample consists of 357 stores with available data on employment and starting wages in waves 1 and 2. The dependent variable in all models is change in FTE employment. The mean and standard deviation of the dependent variable are -0.238 and 8.813, respectively. All models include an unrestricted constant (not reported).
 
-<sup>a</sup> 将起始工资提高到新的最低工资标准所需的起始工资的比例增幅。对于宾夕法尼亚州的商店，工资差距为0。
-<sup>b</sup> 包括三个连锁类型的虚拟变量以及商店是否为公司所有。
-<sup>c</sup> 包括新泽西州两个地区和宾夕法尼亚州东部两个地区的虚拟变量。
-<sup>d</sup> 排除所有控制变量的联合 F 检验的概率值。
+<sup>a</sup> Proportional increase in starting wage necessary to raise starting wage to new minimum rate. For stores in Pennsylvania the wage gap is 0.
+<sup>b</sup> Three dummy variables for chain type and whether or not the store is company-owned are included.
+<sup>c</sup> Dummy variables for two regions of New Jersey and two regions of eastern Pennsylvania are included.
+<sup>d</sup> Probability value of joint F test for exclusion of all control variables.
