@@ -12,20 +12,30 @@
 
 ```
 replication/
-├── data/
-│   ├── public.dat         # 原始调查数据
+├── data/                  # 复制出来的数据包
+│   ├── check.sas          # 数据验证脚本
 │   ├── codebook           # 变量定义和代码
-│   └── check.py           # 数据验证脚本
-├── utility.py             # 通用工具模块（核心重构成果）
-├── test_utility.py        # utility模块测试脚本
+│   └── public.dat         # 原始调查数据
 ├── table_2/               # 关键变量的均值
+│   ├── output.md          # 脚本输出
+│   ├── README.md          # README
+│   ├── replicate.py       # 复现脚本
+│   └── standard_output.md # 原始表格
 ├── table_3/               # 最低工资上涨前后的就业分析  
 ├── table_4/               # 就业变化的简化式模型
 ├── table_5/               # 规范检验
 ├── table_6/               # 对其他结果的影响
 ├── table_7/               # 价格分析
-├── table_8/               # McDonald's餐厅分析
-└── README.md              # 本文件
+├── njmin/                 # 原始数据包
+│   ├── check.sas          # 示例脚本
+│   ├── codebook           # 码本
+│   ├── public.dat         # 数据集
+│   ├── read.me            # README
+│   ├── survey1.nj         # 第一次调研问卷
+│   └── survey2.nj         # 第二次调研问卷
+├── README.md              # 本文件
+├── test_utility.py        # utility模块测试脚本
+└── utility.py             # 通用工具模块
 ```
 
 ## 代码架构与设计
@@ -285,7 +295,7 @@ Card, David, and Alan B. Krueger. "Minimum wages and employment: a case study of
 - **标准化流程**: 统一的数据处理和分析流程
 
 ### 学术价值
-- **完整复现**: 精确复现原论文的所有8个主要表格
+- **完整复现**: 复现原论文的部分表格
 - **方法论验证**: 验证了原研究的统计方法和数据处理
 - **透明性**: 开源代码确保研究的可重现性
 
@@ -302,7 +312,6 @@ Card, David, and Alan B. Krueger. "Minimum wages and employment: a case study of
 - **Table 2**: 工资百分比计算已大幅改善，NJ和PA的$4.25工资百分比现在与标准输出高度一致
 - **Table 3**: 修复了第3行和第4行相同的问题，现在能正确计算不同类型的就业变化
 - **Table 6**: 列交换问题已解决
-- **Table 8**: 输出格式和数值计算正确
 
 ### ⚠️ **仍有小精度差异的表格**
 以下表格的结果在统计上和经济上与原始论文一致，但存在微小的数值精度差异（通常在第2-3位小数）：
@@ -339,7 +348,7 @@ Card, David, and Alan B. Krueger. "Minimum wages and employment: a case study of
 通过本次修复工作：
 - **Table 2**: 从严重偏差改善为高精度匹配
 - **Table 3**: 从逻辑错误改善为完全正确
-- **整体精度**: 8个表格中6个达到高精度匹配，2个仅有微小精度差异
+- **整体精度**: 6个表格中3个达到高精度匹配，3个仅有微小精度差异
 - **代码质量**: 通过utility.py模块大幅提升了代码的可维护性和可重用性
 
 *总体而言，本项目成功复现了Card和Krueger (1994) 的核心结果，微小的精度差异不影响研究的主要结论和政策含义。*
