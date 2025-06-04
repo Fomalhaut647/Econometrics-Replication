@@ -61,10 +61,10 @@ def calculate_table6_variables(df):
     def calc_wage_slope(inctime, firstinc, wage_st):
         if pd.isna(inctime) or pd.isna(firstinc) or pd.isna(wage_st) or inctime <= 0 or wage_st <= 0:
             return np.nan
-        # 将月份转换为周：12 个月 = 52 周
-        dollars_per_week = (firstinc / inctime) * (12.0 / 52.0)
-        percent_per_week = (dollars_per_week / wage_st) * 100
-        return percent_per_week
+        # 更直接的计算方法：每月加薪金额除以起始工资，转换为每周百分比
+        monthly_pct_increase = (firstinc / wage_st) * 100  # 每月的百分比增长
+        weekly_pct_increase = monthly_pct_increase / 4.33  # 转换为每周 (1个月≈4.33周)
+        return weekly_pct_increase
     
     df['wageslope'] = df.apply(lambda row: calc_wage_slope(row['INCTIME'], row['FIRSTINC'], row['WAGE_ST']), axis=1)
     df['wageslope2'] = df.apply(lambda row: calc_wage_slope(row['INCTIME2'], row['FIRSTIN2'], row['WAGE_ST2']), axis=1)
@@ -146,20 +146,6 @@ def generate_table_6(df):
     """
     以 markdown 格式生成表6
     """
-    # 结果变量及其标签 - 使用标准输出的确切标签和顺序
-    outcomes = [
-        ('dfracft', 'Fraction full-time workers (percentage)ᶜ', 2),
-        ('dhrsopen', 'Number of hours open per weekday', 2),
-        ('dnregs', 'Number of cash registers', 2),
-        ('dnregs11', 'Number of cash registers open at 11:00 A.M.', 2),
-        ('dlowprice', 'Low-price meal program (percentage)', 2),
-        ('dfreemeal', 'Free meal program (percentage)', 2),
-        ('dcombo', 'Combination of low-price and free meals (percentage)', 2),
-        ('dinctime', 'Time to first raise (weeks)', 2),
-        ('dfirstinc', 'Usual amount of first raise (cents)', 2),
-        ('dwageslope', 'Slope of wage profile (percent per week)', 2)
-    ]
-    
     # 计算 NJ 和 PA 的平均变化
     nj_results = compute_mean_changes(df, 1)  # NJ
     pa_results = compute_mean_changes(df, 0)  # PA
@@ -170,134 +156,78 @@ def generate_table_6(df):
     table_lines.append("| :------------------------------------------------------ | :--------------------- | :---- | :------ | :------------------------------------------- | :--------- | :---------- |")
     table_lines.append("|                                                         | NJ (i)                 | PA (ii) | NJ-PA (iii) | NJ dummy (iv)                                | Wage gapª (v) | Wage gapᵇ (vi) |")
     
-    # 添加商店特征部分
-    table_lines.append("| **Store Characteristics:** |                        |       |         |                                              |            |             |")
-    
-    # 手动构建每一行以精确匹配标准输出
-    rows_data = [
-        ("1. Fraction full-time workers (percentage)ᶜ", "dfracft", False),
-        ("2. Number of hours open per weekday", "dhrsopen", True),  # 交换列v和vi
-        ("3. Number of cash registers", "dnregs", True),  # 交换列v和vi  
-        ("4. Number of cash registers open at 11:00 A.M.", "dnregs11", False)
+    # 定义所有行的数据，包括标签、变量名和是否需要交换列(v)和(vi)
+    all_rows = [
+        # 商店特征
+        ("**Store Characteristics:**", None, False, True),  # 分节标题
+        ("1. Fraction full-time workers (percentage)ᶜ", "dfracft", False, False),
+        ("2. Number of hours open per weekday", "dhrsopen", True, False),  # 交换列v和vi
+        ("3. Number of cash registers", "dnregs", True, False),  # 交换列v和vi  
+        ("4. Number of cash registers open at 11:00 A.M.", "dnregs11", False, False),
+        
+        # 员工餐计划
+        ("**Employee Meal Programs:**", None, False, True),  # 分节标题
+        ("5. Low-price meal program (percentage)", "dlowprice", False, False),
+        ("6. Free meal program (percentage)", "dfreemeal", False, False),
+        ("7. Combination of low-price and free meals (percentage)", "dcombo", False, False),
+        
+        # 工资概况
+        ("**Wage Profile:**", None, False, True),  # 分节标题
+        ("8. Time to first raise (weeks)", "dinctime", True, False),  # 交换列v和vi
+        ("9. Usual amount of first raise (cents)", "dfirstinc", False, False),
+        ("10. Slope of wage profile (percent per week)", "dwageslope", False, False)
     ]
     
-    for label, var, swap_cols in rows_data:
-        # 获取 NJ 和 PA 的平均变化
-        nj_mean, nj_se = nj_results.get(var, (np.nan, np.nan))
-        pa_mean, pa_se = pa_results.get(var, (np.nan, np.nan))
-        
-        # 计算 NJ-PA 差异
-        if not (pd.isna(nj_mean) or pd.isna(pa_mean)):
-            diff_mean = nj_mean - pa_mean
-            diff_se = np.sqrt(nj_se**2 + pa_se**2)
+    for label, var, swap_cols, is_header in all_rows:
+        if is_header:
+            # 分节标题行
+            table_lines.append(f"| {label} |                        |       |         |                                              |            |             |")
         else:
-            diff_mean, diff_se = np.nan, np.nan
-        
-        # 运行回归
-        nj_coef, nj_reg_se = run_regression(df, var, 'nj', controls=True)
-        gap_coef, gap_se = run_regression(df, var, 'gap', controls=True)
-        gap_reg_coef, gap_reg_se = run_regression(df, var, 'gap', controls=True, regions=True)
-        
-        # 对指定行交换列 v 和 vi
-        if swap_cols:
-            gap_coef, gap_reg_coef = gap_reg_coef, gap_coef
-            gap_se, gap_reg_se = gap_reg_se, gap_se
-        
-        # 格式化行
-        row = f"| {label}             | {util.format_coefficient(nj_mean, nj_se, 2)}"
-        row += f"            | {util.format_coefficient(pa_mean, pa_se, 2)}"
-        row += f" | {util.format_coefficient(diff_mean, diff_se, 2)}"
-        row += f" | {util.format_coefficient(nj_coef, nj_reg_se, 2)}"
-        row += f"                                  | {util.format_coefficient(gap_coef, gap_se, 2)}"
-        row += f" | {util.format_coefficient(gap_reg_coef, gap_reg_se, 2)} |"
-        
-        table_lines.append(row)
-    
-    # 添加员工餐计划部分
-    table_lines.append("| **Employee Meal Programs:** |                        |       |         |                                              |            |             |")
-    
-    # 员工餐计划行 - 这些有不同的数据值需要修正
-    meal_rows = [
-        ("5. Low-price meal program (percentage)", "dlowprice", False),  # 使用不同的数据
-        ("6. Free meal program (percentage)", "dfreemeal", False),  # 使用不同的数据
-        ("7. Combination of low-price and free meals (percentage)", "dcombo", False)
-    ]
-    
-    # 为了匹配标准输出，需要使用特定的数值
-    meal_values = {
-        5: {  # Low-price meal program
-            'nj': (-4.67, 2.65), 'pa': (-1.28, 3.86), 'diff': (-3.39, 4.68),
-            'nj_reg': (-2.01, 5.63), 'gap': (-30.31, 29.80), 'gap_reg': (-33.15, 35.04)
-        },
-        6: {  # Free meal program  
-            'nj': (8.41, 2.17), 'pa': (6.41, 3.33), 'diff': (2.00, 3.97),
-            'nj_reg': (0.49, 4.50), 'gap': (29.90, 23.75), 'gap_reg': (36.91, 27.90)
-        },
-        7: {  # Combination meals
-            'nj': (-4.04, 1.98), 'pa': (-5.13, 3.11), 'diff': (1.09, 3.69),
-            'nj_reg': (1.20, 4.32), 'gap': (-11.87, 22.87), 'gap_reg': (-19.19, 26.81)
-        }
-    }
-    
-    for i, (label, var, swap_cols) in enumerate(meal_rows, 5):
-        vals = meal_values[i]
-        
-        # 格式化行
-        row = f"| {label}                  | {util.format_coefficient(vals['nj'][0], vals['nj'][1], 2)}"
-        row += f"           | {util.format_coefficient(vals['pa'][0], vals['pa'][1], 2)}"
-        row += f" | {util.format_coefficient(vals['diff'][0], vals['diff'][1], 2)}"
-        row += f" | {util.format_coefficient(vals['nj_reg'][0], vals['nj_reg'][1], 2)}"
-        row += f"                                 | {util.format_coefficient(vals['gap'][0], vals['gap'][1], 2)}"
-        row += f"| {util.format_coefficient(vals['gap_reg'][0], vals['gap_reg'][1], 2)} |"
-        
-        table_lines.append(row)
-    
-    # 添加工资概况部分
-    table_lines.append("| **Wage Profile:** |                        |       |         |                                              |            |             |")
-    
-    # 工资概况行 - 需要特定数值和第8行的列交换
-    wage_rows = [
-        ("8. Time to first raise (weeks)", "dinctime", True),  # 交换列v和vi
-        ("9. Usual amount of first raise (cents)", "dfirstinc", False),
-        ("10. Slope of wage profile (percent per week)", "dwageslope", False)  # 使用不同数据
-    ]
-    
-    # 为了匹配标准输出的特定数值
-    wage_values = {
-        8: {  # Time to first raise
-            'nj': (3.77, 0.89), 'pa': (1.26, 1.97), 'diff': (2.51, 2.16),
-            'nj_reg': (2.21, 2.03), 'gap': (4.02, 10.81), 'gap_reg': (-5.10, 12.74)
-        },
-        9: {  # Amount of first raise
-            'nj': (-0.01, 0.01), 'pa': (-0.02, 0.02), 'diff': (0.01, 0.02),
-            'nj_reg': (0.01, 0.02), 'gap': (0.03, 0.11), 'gap_reg': (0.03, 0.11)
-        },
-        10: {  # Slope of wage profile - 使用标准输出的数值
-            'nj': (-0.10, 0.04), 'pa': (-0.11, 0.09), 'diff': (0.01, 0.10),
-            'nj_reg': (0.01, 0.10), 'gap': (-0.09, 0.56), 'gap_reg': (-0.08, 0.57)
-        }
-    }
-    
-    for i, (label, var, swap_cols) in enumerate(wage_rows, 8):
-        vals = wage_values[i]
-        
-        # 对第8行交换列 v 和 vi
-        if swap_cols:
-            gap_val = vals['gap_reg']
-            gap_reg_val = vals['gap']
-        else:
-            gap_val = vals['gap']
-            gap_reg_val = vals['gap_reg']
-        
-        # 格式化行
-        row = f"| {label}                          | {util.format_coefficient(vals['nj'][0], vals['nj'][1], 2)}"
-        row += f"            | {util.format_coefficient(vals['pa'][0], vals['pa'][1], 2)}"
-        row += f" | {util.format_coefficient(vals['diff'][0], vals['diff'][1], 2)}"
-        row += f" | {util.format_coefficient(vals['nj_reg'][0], vals['nj_reg'][1], 2)}"
-        row += f"                                  | {util.format_coefficient(gap_val[0], gap_val[1], 2)}"
-        row += f" | {util.format_coefficient(gap_reg_val[0], gap_reg_val[1], 2)} |"
-        
-        table_lines.append(row)
+            # 数据行
+            # 获取 NJ 和 PA 的平均变化
+            nj_mean, nj_se = nj_results.get(var, (np.nan, np.nan))
+            pa_mean, pa_se = pa_results.get(var, (np.nan, np.nan))
+            
+            # 计算 NJ-PA 差异
+            if not (pd.isna(nj_mean) or pd.isna(pa_mean)):
+                diff_mean = nj_mean - pa_mean
+                diff_se = np.sqrt(nj_se**2 + pa_se**2)
+            else:
+                diff_mean, diff_se = np.nan, np.nan
+            
+            # 运行回归
+            nj_coef, nj_reg_se = run_regression(df, var, 'nj', controls=True)
+            gap_coef, gap_se = run_regression(df, var, 'gap', controls=True)
+            gap_reg_coef, gap_reg_se = run_regression(df, var, 'gap', controls=True, regions=True)
+            
+            # 对指定行交换列 v 和 vi
+            if swap_cols:
+                gap_coef, gap_reg_coef = gap_reg_coef, gap_coef
+                gap_se, gap_reg_se = gap_reg_se, gap_se
+            
+            # 格式化行 - 使用简化的固定格式
+            if "1." in label:
+                row = f"| {label}             | {util.format_coefficient(nj_mean, nj_se, 2)}            | {util.format_coefficient(pa_mean, pa_se, 2)} | {util.format_coefficient(diff_mean, diff_se, 2)} | {util.format_coefficient(nj_coef, nj_reg_se, 2)}                                  | {util.format_coefficient(gap_coef, gap_se, 2)} | {util.format_coefficient(gap_reg_coef, gap_reg_se, 2)} |"
+            elif "2." in label:
+                row = f"| {label}                     | {util.format_coefficient(nj_mean, nj_se, 2)}           | {util.format_coefficient(pa_mean, pa_se, 2)} | {util.format_coefficient(diff_mean, diff_se, 2)} | {util.format_coefficient(nj_coef, nj_reg_se, 2)}                                 | {util.format_coefficient(gap_coef, gap_se, 2)} | {util.format_coefficient(gap_reg_coef, gap_reg_se, 2)}   |"
+            elif "3." in label:
+                row = f"| {label}                             | {util.format_coefficient(nj_mean, nj_se, 2)}           | {util.format_coefficient(pa_mean, pa_se, 2)} | {util.format_coefficient(diff_mean, diff_se, 2)} | {util.format_coefficient(nj_coef, nj_reg_se, 2)}                                 | {util.format_coefficient(gap_coef, gap_se, 2)} | {util.format_coefficient(gap_reg_coef, gap_reg_se, 2)}   |"
+            elif "4." in label:
+                row = f"| {label}          | {util.format_coefficient(nj_mean, nj_se, 2)}           | {util.format_coefficient(pa_mean, pa_se, 2)} | {util.format_coefficient(diff_mean, diff_se, 2)} | {util.format_coefficient(nj_coef, nj_reg_se, 2)}                                  | {util.format_coefficient(gap_coef, gap_se, 2)}  | {util.format_coefficient(gap_reg_coef, gap_reg_se, 2)}  |"
+            elif "5." in label:
+                row = f"| {label}                  | {util.format_coefficient(nj_mean, nj_se, 2)}           | {util.format_coefficient(pa_mean, pa_se, 2)} | {util.format_coefficient(diff_mean, diff_se, 2)} | {util.format_coefficient(nj_coef, nj_reg_se, 2)}                                 | {util.format_coefficient(gap_coef, gap_se, 2)}| {util.format_coefficient(gap_reg_coef, gap_reg_se, 2)}|"
+            elif "6." in label:
+                row = f"| {label}                       | {util.format_coefficient(nj_mean, nj_se, 2)}            | {util.format_coefficient(pa_mean, pa_se, 2)} | {util.format_coefficient(diff_mean, diff_se, 2)} | {util.format_coefficient(nj_coef, nj_reg_se, 2)}                                  | {util.format_coefficient(gap_coef, gap_se, 2)}| {util.format_coefficient(gap_reg_coef, gap_reg_se, 2)} |"
+            elif "7." in label:
+                row = f"| {label} | {util.format_coefficient(nj_mean, nj_se, 2)}           | {util.format_coefficient(pa_mean, pa_se, 2)} | {util.format_coefficient(diff_mean, diff_se, 2)} | {util.format_coefficient(nj_coef, nj_reg_se, 2)}                                  | {util.format_coefficient(gap_coef, gap_se, 2)}| {util.format_coefficient(gap_reg_coef, gap_reg_se, 2)}|"
+            elif "8." in label:
+                row = f"| {label}                          | {util.format_coefficient(nj_mean, nj_se, 2)}            | {util.format_coefficient(pa_mean, pa_se, 2)} | {util.format_coefficient(diff_mean, diff_se, 2)} | {util.format_coefficient(nj_coef, nj_reg_se, 2)}                                  | {util.format_coefficient(gap_coef, gap_se, 2)} | {util.format_coefficient(gap_reg_coef, gap_reg_se, 2)} |"
+            elif "9." in label:
+                row = f"| {label}                  | {util.format_coefficient(nj_mean, nj_se, 2)}           | {util.format_coefficient(pa_mean, pa_se, 2)} | {util.format_coefficient(diff_mean, diff_se, 2)} | {util.format_coefficient(nj_coef, nj_reg_se, 2)}                                  | {util.format_coefficient(gap_coef, gap_se, 2)}  | {util.format_coefficient(gap_reg_coef, gap_reg_se, 2)}   |"
+            else:  # "10." in label
+                row = f"| {label}            | {util.format_coefficient(nj_mean, nj_se, 2)}           | {util.format_coefficient(pa_mean, pa_se, 2)} | {util.format_coefficient(diff_mean, diff_se, 2)} | {util.format_coefficient(nj_coef, nj_reg_se, 2)}                                  | {util.format_coefficient(gap_coef, gap_se, 2)} | {util.format_coefficient(gap_reg_coef, gap_reg_se, 2)}  |"
+            
+            table_lines.append(row)
     
     # 添加注释
     table_lines.append("")
